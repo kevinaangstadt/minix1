@@ -1,4 +1,5 @@
 l=../lib
+CC=bcc
 CFLAGS = -O -DPCIX
 
 all:
@@ -9,7 +10,7 @@ all:
 	make fsck
 
 init:	$l/libc.a init.o $l/head.o
-	ld -o init  $l/head.o init.o $l/libc.a  $l/end.o
+	ld86 -o init  $l/head.o init.o $l/libc.a  $l/end.o
 	@echo init done.
 
 # bootblok.s is the source of the MINIX boot block.  The bootblock is the
@@ -25,7 +26,7 @@ init:	$l/libc.a init.o $l/head.o
 # diskette does not start out by printing 'Booting MINIX 1.0' the problem is
 # probably that you have not made a good boot block.
 bootblok:	bootblok.s
-	as bootblok.s
+	as86 bootblok.s
 	@strip a.out
 	@dd if=a.out of=bootblok bs=16w skip=1 count=16 2>/dev/null
 	@rm a.out
@@ -42,10 +43,10 @@ mkfs.o:	mkfs.c
 	cc -c -O -DUNIX mkfs.c
 
 fsck:	fsck.o fsck1.o
-	@ld -o fsck  fsck1.o fsck.o $l/libc.a
+	@ld86 -o fsck  fsck1.o fsck.o $l/libc.a
 	@echo fsck done.
 fsck1.o:	fsck1.s
-	as -o fsck1.o fsck1.s
+	as86 -o fsck1.o fsck1.s
 
 # 'make image'  combines the bootblock, kernel, memory manager, file 
 # system, init and fsck into a single file, called image.  Each of these pieces

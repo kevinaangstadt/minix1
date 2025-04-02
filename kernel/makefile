@@ -1,6 +1,7 @@
 # The kernel directory contains files xt_wini.c and at_wini.c.  Before running
 # make you must copy one of these to wini.c, depending on whether you have a
 # PC or an AT.  You must do this even if you do not have a hard disk..
+CC=bcc
 CFLAGS = -Di8088 -O
 h=../h
 l=../lib
@@ -10,14 +11,14 @@ obj = mpx88.o main.o proc.o system.o tty.o clock.o memory.o floppy.o wini.o  \
 
 kernel:	makefile $(obj) $l/libc.a
 	@echo "Start linking Kernel"
-	@ld -o kernel  $(obj) $l/libc.a $l/end.o
+	@ld86 -o kernel  $(obj) $l/libc.a $l/end.o
 	@echo "Kernel done"
 
 klib88.o:	klib88.s
-	as -o klib88.o klib88.s
+	as86 -o klib88.o klib88.s
 
 mpx88.o:	mpx88.s
-	as -o mpx88.o mpx88.s
+	as86 -o mpx88.o mpx88.s
 
 clock.o:	const.h type.h $h/const.h $h/type.h
 clock.o:	$h/callnr.h

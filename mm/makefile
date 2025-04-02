@@ -1,3 +1,4 @@
+CC=bcc
 CFLAGS= -Di8088 -O
 h=../h
 l=../lib
@@ -7,7 +8,7 @@ obj =	main.o forkexit.o break.o exec.o signal.o getset.o  \
 
 mm:	makefile  $l/head.o $(obj) $l/libc.a $l/end.o
 	@echo "Start linking MM"
-	@ld -o mm $l/head.o $(obj) $l/libc.a $l/end.o
+	@ld86 -o mm $l/head.o $(obj) $l/libc.a $l/end.o
 	@echo "MM done"
 
 
