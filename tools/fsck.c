@@ -88,7 +88,7 @@
 #define toupper(c)	( (c) + 'A' - 'a' )
 
 #define quote(x)	x
-#define nextarg(t)	(*argp.quote(u_)t++)
+#define nextarg(t)	(*argp.quote(u_##t)++)
 
 #define prn(t,b,s)	{ printnum((long)nextarg(t),b,s,width,pad); width = 0; }
 #define prc(c)		{ width -= printchar(c, mode); }

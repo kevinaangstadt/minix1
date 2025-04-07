@@ -1,6 +1,6 @@
 l=../lib
 CC=bcc
-CFLAGS = -O -DPCIX
+CFLAGS = -0 -O -DPCIX -nolib
 
 all:
 	make init
@@ -32,21 +32,21 @@ bootblok:	bootblok.asm
 	@rm a.out
 	@echo bootblok done.
 
-build:	build.o
+build:	build.c
+	cc -std=c90 -c build.c
 	cc -o build build.o
 	@echo build done.
 
-mkfs:	mkfs.o
+mkfs:	mkfs.c
+	cc -std=c90 -DUNIX -c mkfs.c
 	cc -o mkfs mkfs.o
 	@echo mkfs done.
-mkfs.o:	mkfs.c
-	cc -c -O -DUNIX mkfs.c
 
 fsck:	fsck.o fsck1.o
-	@ld86 -o fsck  fsck1.o fsck.o $l/libc.a
+	@ld86 -L/usr/lib/bcc/  -o fsck fsck1.o fsck.o $l/libc.a  -lc 
 	@echo fsck done.
 fsck1.o:	fsck1.asm
-	nasm -f as86 -o fsck1.o fsck1.asm
+	nasm -DSTANDALONE -f as86 -o fsck1.o fsck1.asm
 
 # 'make image'  combines the bootblock, kernel, memory manager, file 
 # system, init and fsck into a single file, called image.  Each of these pieces

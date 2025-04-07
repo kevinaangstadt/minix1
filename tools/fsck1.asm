@@ -1,17 +1,23 @@
+bits 16
+cpu 8086 
+
 %define STACKSIZE 8192
 
-global _main, _exit, _edata, _end, _putc, _getc, _reset_diskette, _diskio
+global auto_start
+global _exit, _putc, _getc, _reset_diskette, _diskio
 global csv, cret, begtext, begdata, begbss
-global _cylsiz, _tracksiz, _drive
+extern _cylsiz, _tracksiz, _drive
+extern __edata, __end, _main
 
 section .text
 begtext:
 
+auto_start:
 start:
     mov dx, bx           ; bootblok puts # sectors/track in bx
     xor ax, ax
-    mov bx, _edata       ; prepare to clear bss
-    mov cx, _end
+    mov bx, __edata       ; prepare to clear bss
+    mov cx, __end
     sub cx, bx
     shr cx, 1
 st_1:
@@ -65,9 +71,9 @@ _reset_diskette:
 _diskio:
     xor ax, ax
     call csv
-    mov [tmp1], 0        ; tmp1 = # sectors actually transferred
+    mov word [tmp1], 0        ; tmp1 = # sectors actually transferred
     mov di, [bp+10]      ; di = # sectors to transfer
-    mov [tmp2], di       ; tmp2 = # sectors to transfer
+    mov word [tmp2], di       ; tmp2 = # sectors to transfer
 d0:
     mov ax, [bp+6]       ; ax = sector number to start at
     xor dx, dx           ; dx:ax is dividend
@@ -89,7 +95,7 @@ d0:
     dec al               ; al = last sector to transfer
     cmp al, [_tracksiz]  ; see if last sector is on next track
     jle d1               ; jump if last sector is on this track
-    mov [bp+10], 1       ; transfer 1 sector at a time
+    mov byte [bp+10], 1       ; transfer 1 sector at a time
 d1:
     mov ah, [bp+4]       ; ah = READING or WRITING
     add ah, 2            ; BIOS codes are 2 and 3, not 0 and 1
