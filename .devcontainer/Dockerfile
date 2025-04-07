@@ -6,13 +6,19 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
       build-essential \
       coreutils \
       curl \
+      file \
+      gcc-doc \
       git \
       hexedit \
+      man-db \
       make \
       nasm \
       tar \
+      unminimize \
       unzip \
       xxd \
       zip && \  
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    yes | unminimize && \
+    apt-get autoremove -y
