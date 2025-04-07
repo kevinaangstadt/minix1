@@ -104,6 +104,9 @@ PRIVATE struct param {
 	int max_ecc;		/* Maximum ECC burst length */
 } param0, param1;
 
+PRIVATE init_params();
+PRIVATE copy_params();
+
 /*===========================================================================*
  *				winchester_task				     * 
  *===========================================================================*/
@@ -114,7 +117,7 @@ PUBLIC winchester_task()
   int r, caller, proc_nr;
 
   /* First initialize the controller */
-  init_param();
+  init_params();
 
   /* Here is the main loop of the disk task.  It waits for a message, carries
    * it out, and sends a reply.
@@ -585,8 +588,8 @@ PRIVATE init_params()
   phys_copy(address, umap(proc_addr(WINCHESTER), D, buf, 64), 64L);
 
   /* Copy the parameters to the structures */
-  copy_param((&buf[type_0 * 16]), &param0);
-  copy_param((&buf[type_1 * 16]), &param1);
+  copy_params((&buf[type_0 * 16]), &param0);
+  copy_params((&buf[type_1 * 16]), &param1);
 
   /* Get the nummer of drives from the bios */
   phys_copy(0x475L, umap(proc_addr(WINCHESTER), D, buf, 1), 1L);
