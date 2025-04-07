@@ -2,7 +2,7 @@
 # make you must copy one of these to wini.c, depending on whether you have a
 # PC or an AT.  You must do this even if you do not have a hard disk..
 CC=bcc
-CFLAGS = -Di8088 -O
+CFLAGS = -Di8088 -0 -O
 h=../h
 l=../lib
 
@@ -14,11 +14,11 @@ kernel:	makefile $(obj) $l/libc.a
 	@ld86 -o kernel  $(obj) $l/libc.a $l/end.o
 	@echo "Kernel done"
 
-klib88.o:	klib88.s
-	as86 -o klib88.o klib88.s
+klib88.o:	klib88.asm
+	nasm -f as86 -o klib88.o klib88.asm
 
-mpx88.o:	mpx88.s
-	as86 -o mpx88.o mpx88.s
+mpx88.o:	mpx88.asm
+	nasm -f as86 -o mpx88.o mpx88.asm
 
 clock.o:	const.h type.h $h/const.h $h/type.h
 clock.o:	$h/callnr.h
