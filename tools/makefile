@@ -55,7 +55,7 @@ fsck1.o:	fsck1.asm
 # integral multiple of 16 bytes.  Build also prints a message telling how big
 # the various pieces (except fsck) are.
 image:	 build bootblok ../kernel/kernel ../mm/mm ../fs/fs init fsck 
-	@build bootblok ../kernel/kernel ../mm/mm ../fs/fs init fsck  image
+	@./build bootblok ../kernel/kernel ../mm/mm ../fs/fs init fsck  image
 	cp image /dev/fd0
 
 # 'make usr' builds a file system on a file called 'usr', and then
