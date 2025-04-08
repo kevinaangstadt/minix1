@@ -2,3 +2,5 @@ bootblok
 build
 fsck
 mkfs
+image
+init
