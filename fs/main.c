@@ -26,6 +26,14 @@
 #define INFO               2	/* where in data_org is info from build */
 #define MAX_RAM          512	/* maxium RAM disk size in blocks */
 
+/* Force inclusion of head.asm */
+extern _exit();
+void (*force_exit)() = _exit;
+
+/* Force inclusion of end.asm */
+extern _end();
+void (*force_end)() = _end;
+
 /*===========================================================================*
  *				main					     *
  *===========================================================================*/
