@@ -1,7 +1,8 @@
-global begtext, begdata, begbss, _data_org, _exit
+global begtext, begdata, begbss, _data_org, _exit, auto_start
 extern _main, _stackpt
 
 section .text
+auto_start:
 begtext:
     jmp L0
     times 7 dw 0       ; kernel uses this area as stack for initial IRET
