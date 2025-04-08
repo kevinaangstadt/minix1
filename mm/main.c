@@ -29,6 +29,14 @@
 PRIVATE phys_clicks tot_mem;
 extern (*call_vec[])();
 
+/* Force inclusion of head.asm */
+extern _exit();
+void (*force_exit)() = _exit;
+
+/* Force inclusion of end.asm */
+extern _end();
+void (*force_end)() = _end;
+
 /*===========================================================================*
  *				main					     *
  *===========================================================================*/
