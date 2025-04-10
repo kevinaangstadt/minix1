@@ -10,7 +10,7 @@ obj =	main.o open.o read.o write.o pipe.o device.o \
 fs:	makefile   $l/head.o $(obj) $l/libc.a $l/end.o
 	@echo "Start linking FS."  #  /lib/cem will be removed to make space on RAM disk"
 	# @rm -f /lib/cem /tmp/*
-	ld86 -L/usr/lib/bcc -o fs $l/head.o $(obj) $l/libc.a $l/end.o -lc
+	ld86 -s -L/usr/lib/bcc -o fs $l/head.o $(obj) $l/libc.a $l/end.o -lc
 	@echo "FS done.  Please restore /lib/cem manually"
 
 cache.o:	const.h type.h $h/const.h $h/type.h

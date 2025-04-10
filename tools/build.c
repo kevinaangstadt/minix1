@@ -193,7 +193,7 @@ char *file_name;                /* file to open */
 
   /* Print a message giving the program name and size, except for fsck. */
   if (num < FSCK) { 
-        printf("%s  text=%5u  data=%5u  bss=%5u  tot=%5u  hex=%4x  %s\n",
+        printf("%s  text=%5u  data=%5u  bss=%5u  tot=%6u  hex=%4x  %s\n",
                 name[num], text_bytes, data_bytes, bss_bytes, tot_bytes,
                 tot_bytes, (sizes[num].sep_id ? "Separate I & D" : ""));
   }
@@ -446,6 +446,7 @@ patch3()
   /* Check for appropriate magic numbers. */
   fbase = fs_org;
   mag = (get_byte(mm_data+1L) << 8) + get_byte(mm_data+0L);
+  printf("mm magic: 0x%04x\n", mag);
   if (mag != FS_D_MAGIC) pexit("mm data space: no magic #","");
   mag = (get_byte(fbase+1L) << 8) + get_byte(fbase+0L);
   if (mag != FS_D_MAGIC) pexit("fs data space: no magic #","");

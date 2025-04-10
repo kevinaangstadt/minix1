@@ -26,14 +26,14 @@ init:	$l/libc.a init.o $l/head.o
 # diskette does not start out by printing 'Booting MINIX 1.0' the problem is
 # probably that you have not made a good boot block.
 bootblok:	bootblok.asm
-	nasm -f elf -o a.out bootblok.asm
-	@strip -F elf32-little a.out
-	@dd if=a.out of=bootblok bs=16w skip=1 count=16 2>/dev/null
+	nasm -f bin -o a.out bootblok.asm
+	#@strip -F elf32-little a.out
+	@dd if=a.out of=bootblok bs=512 count=1 2>/dev/null
 	@rm a.out
 	@echo bootblok done.
 
 build:	build.c
-	cc -std=c90 -c build.c
+	cc -DPCIX -std=c90 -c build.c
 	cc -o build build.o
 	@echo build done.
 

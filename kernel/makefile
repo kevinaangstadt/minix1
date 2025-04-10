@@ -11,7 +11,7 @@ obj = mpx88.o main.o proc.o system.o tty.o clock.o memory.o floppy.o wini.o  \
 
 kernel:	makefile $(obj) $l/libc.a
 	@echo "Start linking Kernel"
-	@ld86 -L/usr/lib/bcc -o kernel  $(obj) $l/libc.a $l/end.o -lc
+	@ld86 -s -L/usr/lib/bcc -o kernel  $(obj) $l/libc.a $l/end.o -lc
 	@echo "Kernel done"
 
 klib88.o:	klib88.asm
