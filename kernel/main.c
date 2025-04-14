@@ -28,6 +28,9 @@
 #define CPU_TY2       0x000E	/* BIOS offset that tells CPU type */
 #define PC_AT           0xFC	/* IBM code for PC-AT (in BIOS at 0xFFFFE) */
 
+char *stackpt = k_stack;
+
+
 /*===========================================================================*
  *                                   main                                    * 
  *===========================================================================*/
