@@ -41,6 +41,9 @@
  * to get the resulting image onto the file "image".
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 #define PROGRAMS 5              /* kernel + mm + fs + init + fsck = 5 */
 #define PROG_ORG 1536           /* where does kernel begin in abs mem */
@@ -72,31 +75,34 @@
 # define BREAD 0
 #endif
 
-int image;                      /* file descriptor used for output file */
-int cur_sector;                 /* which 512-byte sector to be written next */
-int buf_bytes;                  /* # bytes in buf at present */
+int16_t image;                      /* file descriptor used for output file */
+int16_t cur_sector;                 /* which 512-byte sector to be written next */
+int16_t buf_bytes;                  /* # bytes in buf at present */
 char buf[SECTOR_SIZE];          /* buffer for output file */
 char zero[SECTOR_SIZE];         /* zeros, for writing bss segment */
 
-long cum_size;                  /* Size of kernel+mm+fs+init */
-long all_size;                  /* Size of all 5 programs */
+int32_t cum_size;                  /* Size of kernel+mm+fs+init */
+int32_t all_size;                  /* Size of all 5 programs */
 
 struct sizes {
-  unsigned text_size;           /* size in bytes */
-  unsigned data_size;           /* size in bytes */
-  unsigned bss_size;            /* size in bytes */
-  int sep_id;                   /* 1 if separate, 0 if not */
+  uint16_t text_size;           /* size in bytes */
+  uint16_t data_size;           /* size in bytes */
+  uint16_t bss_size;            /* size in bytes */
+  int16_t sep_id;                   /* 1 if separate, 0 if not */
 } sizes[PROGRAMS];
 
 char *name[] = {"\nkernel", "mm    ", "fs    ", "init  ", "fsck  "};
 
+/* forward-declare functions */
+int16_t get_byte(int32_t offset);
+
 main(argc, argv)
-int argc;
+int16_t argc;
 char *argv[];
 {
 /* Copy the boot block and the 5 programs to the output. */
 
-  int i;
+  int16_t i;
 
   if (argc != PROGRAMS+3) pexit("seven file names expected. ", "");
 
@@ -111,8 +117,8 @@ char *argv[];
   flush();
   printf("                                               -----     -----\n");
 #ifdef PCIX
-  printf("Operating system size  %29ld     %5lx\n", cum_size, cum_size);
-  printf("\nTotal size including fsck is %ld.\n", all_size);
+  printf("Operating system size  %29d     %5x\n", cum_size, cum_size);
+  printf("\nTotal size including fsck is %d.\n", all_size);
 #else
   printf("Operating system size  %29D     %5X\n", cum_size, cum_size);
   printf("\nTotal size including fsck is %D.\n", all_size);
@@ -134,7 +140,7 @@ char *file_name;
  * bytes are copied, until end-of-file is hit.
  */
 
-  int fd, bytes_read;
+  int16_t fd, bytes_read;
   char inbuf[READ_UNIT];
 
   if ( (fd = open(file_name, BREAD)) < 0) pexit("can't open ",file_name);
@@ -150,7 +156,7 @@ char *file_name;
 
 
 copy2(num, file_name)
-int num;                        /* which program is this (0 - 4) */
+int16_t num;                        /* which program is this (0 - 4) */
 char *file_name;                /* file to open */
 {
 /* Open and read a file, copying it to output.  First read the header,
@@ -162,9 +168,9 @@ char *file_name;                /* file to open */
  * when separate I & D space is used.
  */
 
-  int fd, sepid, bytes_read, count;
-  unsigned text_bytes, data_bytes, bss_bytes, tot_bytes, rest, filler;
-  unsigned left_to_read;
+  int16_t fd, sepid, bytes_read, count;
+  uint16_t text_bytes, data_bytes, bss_bytes, tot_bytes, rest, filler;
+  uint16_t left_to_read;
   char inbuf[READ_UNIT];
   
   if ( (fd = open(file_name, BREAD)) < 0) pexit("can't open ", file_name);
@@ -220,8 +226,8 @@ char *file_name;                /* file to open */
 
 
 read_header(fd, sepid, text_bytes, data_bytes, bss_bytes, file_name)
-int fd, *sepid;
-unsigned *text_bytes, *data_bytes, *bss_bytes;
+int16_t fd, *sepid;
+uint16_t *text_bytes, *data_bytes, *bss_bytes;
 char *file_name;
 {
 /* Read the header and check the magic number.  The standard Monix header 
@@ -240,9 +246,11 @@ char *file_name;
  * are given in the header.
  */
 
-  long head[12];
-  unsigned short hd[4];
-  int n, header_len;
+  int32_t head[12];
+  uint16_t hd[4];
+  int16_t n, header_len;
+
+  int16_t i;
 
   /* Read first 8 bytes of header to get header length. */
   if ((n = read(fd, hd, 8)) != 8) pexit("file header too short: ", file_name);
@@ -265,7 +273,7 @@ char *file_name;
 
 wr_out(buffer, bytes)
 char buffer[READ_UNIT];
-int bytes;
+int16_t bytes;
 {
 /* Write some bytes to the output file.  This procedure must avoid writes
  * that are not entire 512-byte blocks, because when this program runs on
@@ -273,7 +281,7 @@ int bytes;
  * calls for raw block I/O.
  */
 
-  int room, count, count1;
+  int16_t room, count, count1;
   register char *p, *q;
 
   /* Copy the data to the output buffer. */
@@ -320,15 +328,15 @@ clear_buf()
 
 
 patch1(all_size)
-long all_size;
+int32_t all_size;
 {
 /* Put the ip and cs values for fsck in the last two words of the boot blk.
  * If fsck is sep I&D we must also provide the ds-value (addr. 506).
  * Put in bootblok-offset 504 the number of sectors to load.
  */
 
-  long fsck_org;
-  unsigned short ip, cs, ds, ubuf[SECTOR_SIZE/2], sectrs;
+  int32_t fsck_org;
+  uint16_t ip, cs, ds, ubuf[SECTOR_SIZE/2], sectrs;
 
   if (cum_size % 16 != 0) pexit("MINIX is not multiple of 16 bytes", "");
   fsck_org = PROG_ORG + cum_size;       /* where does fsck begin */
@@ -366,9 +374,9 @@ patch2()
  * can't load DS from data space, but it can load DS from text space.
  */
 
-  int i, j;
-  unsigned short t, d, b, text_clicks, data_clicks, ds;
-  long data_offset;
+  int16_t i, j;
+  uint16_t t, d, b, text_clicks, data_clicks, ds;
+  int32_t data_offset;
 
   /* See if the magic number is where it should be in the kernel. */
   data_offset = 512L + (long)sizes[KERN].text_size;    /* start of kernel data */
@@ -410,18 +418,18 @@ patch3()
  * space.  The file system expects to find these 3 words there.
  */
 
-  unsigned short init_text_size, init_data_size, init_buf[SECTOR_SIZE/2], i;
-  unsigned short w0, w1, w2;
-  int b0, b1, b2, b3, b4, b5, mag;
-  long init_org, fs_org, fbase, mm_data;
+  uint16_t init_text_size, init_data_size, init_buf[SECTOR_SIZE/2], i;
+  uint16_t w0, w1, w2, mag;
+  int16_t b0, b1, b2, b3, b4, b5;
+  int32_t init_org, fs_org, fbase, mm_data;
 
   init_org  = PROG_ORG;
   init_org += sizes[KERN].text_size+sizes[KERN].data_size+sizes[KERN].bss_size;
   mm_data = init_org - PROG_ORG +512L;	/* offset of mm in file */
-  mm_data += (long) sizes[MM].text_size;
+  mm_data += (int32_t) sizes[MM].text_size;
   init_org += sizes[MM].text_size + sizes[MM].data_size + sizes[MM].bss_size;
   fs_org = init_org - PROG_ORG + 512L;   /* offset of fs-text into file */
-  fs_org +=  (long) sizes[FS].text_size;
+  fs_org +=  (int32_t) sizes[FS].text_size;
   init_org += sizes[FS].text_size + sizes[FS].data_size + sizes[FS].bss_size;
   init_text_size = sizes[INIT].text_size;
   init_data_size = sizes[INIT].data_size + sizes[INIT].bss_size;
@@ -433,7 +441,7 @@ patch3()
   init_text_size = init_text_size >> CLICK_SHIFT;
   init_data_size = init_data_size >> CLICK_SHIFT;
 
-  w0 = (unsigned short) init_org;
+  w0 = (uint16_t) init_org;
   w1 = init_text_size;
   w2 = init_data_size;
   b0 =  w0 & 0377;
@@ -445,8 +453,9 @@ patch3()
 
   /* Check for appropriate magic numbers. */
   fbase = fs_org;
+  printf("byte %04x %x\n", (get_byte(mm_data+1L) << 8) + get_byte(mm_data+0L), FS_D_MAGIC);
   mag = (get_byte(mm_data+1L) << 8) + get_byte(mm_data+0L);
-  printf("mm magic: 0x%04x\n", mag);
+  printf("mm magic (0x%04x): 0x%04x\n", mm_data, mag);
   if (mag != FS_D_MAGIC) pexit("mm data space: no magic #","");
   mag = (get_byte(fbase+1L) << 8) + get_byte(fbase+0L);
   if (mag != FS_D_MAGIC) pexit("fs data space: no magic #","");
@@ -460,8 +469,8 @@ patch3()
 }
 
 
-int get_byte(offset)
-long offset;
+int16_t get_byte(offset)
+int32_t offset;
 {
 /* Fetch one byte from the output file. */
 
@@ -472,8 +481,8 @@ long offset;
 }
 
 put_byte(offset, byte_value)
-long offset;
-int byte_value;
+int32_t offset;
+int16_t byte_value;
 {
 /* Write one byte into the output file. This is not very efficient, but
  * since it is only called to write a few words it is just simpler.
@@ -481,9 +490,9 @@ int byte_value;
 
   char buff[SECTOR_SIZE];
 
-  read_block( (unsigned) (offset/SECTOR_SIZE), buff);
-  buff[(unsigned) (offset % SECTOR_SIZE)] = byte_value;
-  write_block( (unsigned)(offset/SECTOR_SIZE), buff);
+  read_block( (uint16_t) (offset/SECTOR_SIZE), buff);
+  buff[(uint16_t) (offset % SECTOR_SIZE)] = byte_value;
+  write_block( (uint16_t)(offset/SECTOR_SIZE), buff);
 }
 
 
@@ -510,7 +519,7 @@ char *f;
 }
 
 read_block(blk, buff)
-int blk;
+int16_t blk;
 char buff[SECTOR_SIZE];
 {
   lseek(image, (long)SECTOR_SIZE * (long) blk, 0);
@@ -518,7 +527,7 @@ char buff[SECTOR_SIZE];
 }
 
 write_block(blk, buff)
-int blk;
+int16_t blk;
 char buff[SECTOR_SIZE];
 {
   lseek(image, (long)SECTOR_SIZE * (long) blk, 0);

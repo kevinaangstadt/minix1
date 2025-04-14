@@ -111,7 +111,7 @@ load:
     int 0x13             ; call the BIOS for a read
     jb error             ; jump on diskette error
     mov ax, [disksec]    ; see if we are done loading
-    cmp ax, final        ; ditto
+    cmp ax, [final]      ; ditto
     jb load              ; jump if there is more to load
 
 ; Loading done. Finish up.
@@ -125,7 +125,7 @@ load:
     mov es, ax           ; otherwise they are the same.
     mov ss, ax           ; words 504 - 510 are patched by build
 
-    jmp far [cs:fsck_pc] ; jump to fsck
+    jmp far [cs:fsck_pc]    ; jump to fsck
 
 ; Given the number of the next disk block to read, disksec, compute the
 ; cylinder, sector, head, and number of sectors to read as follows:
@@ -167,8 +167,9 @@ set1:
 set2:
     mov ax, si           ; ax = number of sectors to read
     xor dx, dx           ; dh = head, dl = drive
-    mov dh, ch           ; dh = track
+    mov dh, cl           ; dh = track
     and dh, 1            ; dh = head
+    mov ch, cl           ; ch = track to read
     shr ch, 1            ; ch = cylinder
     mov cl, bl           ; cl = sector number (0-origin)
     inc cl               ; cl = sector number (1-origin)

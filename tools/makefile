@@ -75,7 +75,7 @@ user:	mkfs proto.user
 # will be copied to the boot diskette when 'image' is made.  During system boot
 # it is copied from 128K on the boot diskette to the RAM disk.
 ram:	mkfs proto.ram rc 
-	mkfs -l ram proto.ram >log.ram
+	./mkfs -l ram proto.ram > log.ram
 	cp ram /dev/fd0
 
 disk5:	mkfs proto.disk5

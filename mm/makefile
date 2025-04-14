@@ -8,7 +8,7 @@ obj =	main.o forkexit.o break.o exec.o signal.o getset.o  \
 
 mm:	makefile  $l/head.o $(obj) $l/libc.a $l/end.o
 	@echo "Start linking MM"
-	@ld86 -s -0 -m -L/usr/lib/bcc -o mm $l/head.o $(obj) $l/libc.a $l/end.o -lc
+	@ld86 -0 -m -o mm $l/head.o $(obj) $l/libc.a $l/end.o -L/usr/lib/bcc -lc
 	@echo "MM done"
 
 
