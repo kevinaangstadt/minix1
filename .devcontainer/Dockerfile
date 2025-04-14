@@ -2,7 +2,6 @@ FROM ubuntu:latest
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y \
-      bcc \
       build-essential \
       coreutils \
       curl \
@@ -23,3 +22,10 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/* && \
     yes | unminimize && \
     apt-get autoremove -y
+  
+RUN git clone https://github.com/lkundrak/dev86 /dev86 && \
+    cd /dev86 && \
+    git checkout v0.16.21 && \
+    make && \
+    make install && \
+    rm -rf /dev86
