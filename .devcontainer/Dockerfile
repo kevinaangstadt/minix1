@@ -9,6 +9,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
       file \
       gcc-doc \
       git \
+      gnupg2 \
       hexedit \
       man-db \
       make \
