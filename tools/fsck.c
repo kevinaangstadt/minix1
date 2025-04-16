@@ -179,7 +179,7 @@ long atol();
 #endif
 
 #ifdef STANDALONE
-extern end;			/* last variable */
+extern _end;			/* last variable */
 int *brk;			/* the ``break'' (end of data space) */
 #else
 int dev;			/* file descriptor of the device */
@@ -361,7 +361,7 @@ initvars(){
 	register level;
 
 #ifdef STANDALONE
-	  brk = &end;
+	  brk = &_end;
 #endif
 	nregular = ndirectory = nblkspec = ncharspec = nbadinode = 0;
 	for (level = 0; level < NLEVEL; level++)
