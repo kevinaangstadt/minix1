@@ -60,22 +60,22 @@ begtext:
 ;*				MINIX					     *
 ;*===========================================================================*
 MINIX:				; this is the entry point for the MINIX kernel.
-    jmp short M_0		; skip over the next few bytes
+    jmp near M_0 		; skip over the next few bytes
     dw 0, 0			; build puts DS at kernel text address 4
 M_0:
     cli                     ; disable interrupts
     mov ax, cs		; set up segment registers
     mov ds, ax		; set up ds
-    mov ax, 4		; build has loaded this word with ds value
+    mov ax, [4]		; build has loaded this word with ds value
     mov ds, ax		; ds now contains proper value
     mov ss, ax		; ss now contains proper value
-    mov [rel _scan_code], bx	; save scan code for '=' key from bootstrap
-      mov sp, _k_stack	; set sp to point to the top of the
+    mov [_scan_code], bx	; save scan code for '=' key from bootstrap
+    mov sp, _k_stack	; set sp to point to the top of the
     add sp, K_STACK_BYTES	; 	kernel stack
 
     call _main		; start the main program of MINIX
 M_1:
-    jmp M_1			; this should never be executed
+    jmp near M_1	; this should never be executed
 
 ;*===========================================================================*
 ;*				s_call					     *
