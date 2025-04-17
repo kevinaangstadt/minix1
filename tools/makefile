@@ -43,7 +43,7 @@ mkfs:	mkfs.c
 	@echo mkfs done.
 
 fsck:	fsck.o fsck1.o
-	@ld86 -m -L/usr/lib/bcc/  -o fsck fsck1.o fsck.o $l/libc.a  -lc 
+	@ld86 -m -L/usr/lib/bcc/  -o fsck fsck1.o fsck.o $l/libc.a  -lbcc 
 	@echo fsck done.
 fsck1.o:	fsck1.asm
 	nasm -DSTANDALONE -f as86 -o fsck1.o fsck1.asm
