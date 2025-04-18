@@ -176,12 +176,7 @@ save:				; save the machine state in the proc table.
     push ds			; stack: psw/cs/pc/ret addr/ds
     push cs			; prepare to restore ds
     pop ds			; ds has now been set to cs
-    ; mov ds, 4		; word 4 in kernel text space contains ds value
-	; I think this does the same thing
-	push ax 
-	mov ax, [4]
-	mov ds, ax
-	pop ax
+    mov ds, [4]		; word 4 in kernel text space contains ds value
     pop word [ds_save]		; stack: psw/cs/pc/ret addr
     pop word [ret_save]		; stack: psw/cs/pc
     mov [bx_save], bx	; save bx for later ; we need a free register

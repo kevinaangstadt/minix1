@@ -54,7 +54,7 @@ _phys_copy:
 
   L0:	
 	mov ax,[bp + 28]	; ax = high-order word of 32-bit destination
-	mov di,[bp + 28]	; di = low-order word of 32-bit	destination
+	mov di,[bp + 26]	; di = low-order word of 32-bit	destination
 	mov cx,4			; start	extracting click number	from dest
   L1:	
 	rcr ax,1			; click	number is destination address /	16
@@ -63,7 +63,7 @@ _phys_copy:
 	mov es,di			; es = destination click
 
 	mov ax,[bp + 24]	; ax = high-order word of 32-bit source
-	mov si,22[bp + 22]	; si = low-order word of 32-bit	source
+	mov si,[bp + 22]	; si = low-order word of 32-bit	source
 	mov cx,4			; start	extracting click number	from source
   L2:	
 	rcr ax,1			; click	number is source address / 16
@@ -76,7 +76,7 @@ _phys_copy:
 	mov si,[bp + 22]	; si = low-order word of source	address
 	and si,0x000F		; si = offset from paragraph  in ds
 	mov dx,[bp + 32]	; dx = high-order word of byte count
-	mov cx,[bp + 32]	; cx = low-order word of byte count
+	mov cx,[bp + 30]	; cx = low-order word of byte count
 
 	test cx,0x8000		; if bytes >= 32768, only do 32768
 	jnz L3				; per iteration
