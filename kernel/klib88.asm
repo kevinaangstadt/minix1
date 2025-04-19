@@ -75,12 +75,13 @@ _phys_copy:
 	and di,0x000F		; di = offset from paragraph  in es
 	mov si,[bp + 22]	; si = low-order word of source	address
 	and si,0x000F		; si = offset from paragraph  in ds
+
 	mov dx,[bp + 32]	; dx = high-order word of byte count
 	mov cx,[bp + 30]	; cx = low-order word of byte count
 
 	test cx,0x8000		; if bytes >= 32768, only do 32768
 	jnz L3				; per iteration
-	test dx,0x0FFFF		; check	high-order 17 bits to see if bytes
+	test dx,0xFFFF		; check	high-order 17 bits to see if bytes
 	jnz L3				; if bytes >= 32768 then go to L3
 	jmp L4				; if bytes < 32768 then	go to L4
   L3:	
@@ -102,7 +103,7 @@ _phys_copy:
 	mov cx,[bp + 30]	; dx ||	cx is 32-bit byte count
 	xor bx,bx			; bx ||	ax is 32-bit actual count used
 	sub cx,ax			; compute bytes	- actual count
-	sbb dx,bx			; dx ;;	cx is  bytes not yet processed
+	sbb dx,bx			; dx ||	cx is # bytes not yet processed
 	or cx,cx			; see if it is 0
 	jnz L7				; if more bytes	then go	to L7
 	or dx,dx			; keep testing
@@ -341,7 +342,7 @@ csv:
 
 .1:
 	mov word [splimit],0	; prevent call to panic	from aborting in csv
-	mov bx,_proc_ptr		; update rp->p_splimit
+	mov bx,[_proc_ptr]		; update rp->p_splimit
 	mov word [bx+50],0		; rp->sp_limit = 0
 	push word [_cur_proc]	; task number
 	mov ax,stkoverrun		; stack	overran	the kernel stack area
@@ -404,14 +405,14 @@ _vid_copy:
 vid0:
 	mov si,[bp+4]		; si = pointer to data to be copied
 	mov di,[bp+8]		; di = offset within video ram
-	and di,_vid_mask	; only 4K or 16K counts
+	and di,[_vid_mask]	; only 4K or 16K counts
 	mov cx,[bp+10]		; cx = word count for copy loop
-	mov dx,03DAh		; prepare to see if color display is retracing
+	mov dx,0x03DA		; prepare to see if color display is retracing
 
 	mov bx,di			; see if copy will run off end of video ram
 	add bx,cx			; compute where copy ends
 	add bx,cx			; bx = last character copied + 1
-	sub bx,_vid_mask	; bx = # characters beyond end of video ram
+	sub bx,[_vid_mask]	; bx = # characters beyond end of video ram
 	sub bx,1			; note: dec bx doesn't set flags properly
 	jle vid1			; jump if no overrun
 	sar bx,1			; bx = # words that don't fit in video ram
@@ -449,7 +450,7 @@ vid5:
 	mov word [bp+8],0	; start copying at base of video ram
 	cmp word [bp+4],0	; NIL_PTR means store blanks
 	je vid0				; go do it
-	mov si,tmp			; si = count of words copied
+	mov si,[tmp]		; si = count of words copied
 	add si,si			; si = count of bytes copied
 	add [bp+4],si		; increment buffer pointer
 	jmp vid0			; go copy some more
@@ -492,21 +493,21 @@ _get_byte:
 
 
 ;===========================================================================
-;				reboot & dump
+;				reboot & wreboot
 ;===========================================================================
 ; This code reboots the	PC
 
 
 _reboot:
 	cli				; disable interrupts
-	mov al,0x20
+	mov ax,0x20
 	out 0x20,al		; re-enable interrupt controller
 	call resvec		; restore the vectors in low core
 	int 0x19		; reboot the PC
 
 _wreboot:
 	cli				; disable interrupts
-	mov al,0x20		; re-enable interrupt controller
+	mov ax,0x20		; re-enable interrupt controller
 	out 0x20,al
 	call resvec		; restore the vectors in low core
 	xor ax,ax		; wait for character before continuing
@@ -516,7 +517,7 @@ _wreboot:
 ; Restore the interrupt	vectors	in low core.
 resvec:
 	cld
-	mov cx,2*65
+	mov cx,2*71
 	mov si,_vec_table
 	xor di,di
 	mov es,di
@@ -537,7 +538,7 @@ lockvar:	DW	 0		; place	to store flags for lock()/restore()
 splimit:   	DW	 0		; limit for kernel stack
 tmp:        DW   0		; count of bytes already copied
 stkoverrun:	DB	 "Kernel stack overrun,	task = ",0
-_vec_table: times 142 DW 0	; storage for interrupt	vectors
+_vec_table: resw 142	; storage for interrupt	vectors
 
 
 

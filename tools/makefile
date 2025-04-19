@@ -1,6 +1,6 @@
 l=../lib
 CC=bcc
-CFLAGS = -0 -DPCIX
+CFLAGS = -0 -O -DPCIX
 
 all:
 	make init
@@ -9,8 +9,11 @@ all:
 	make mkfs
 	make fsck
 
+clean:
+	rm -rf init bootblock build mkfs fsck *.o image
+
 init:	$l/libc.a init.o $l/head.o
-	ld86 -o init  $l/head.o init.o $l/libc.a  $l/end.o
+	ld86 -0 -s -m -L/usr/lib/bcc -o init  $l/head.o init.o $l/libc.a  $l/end.o -lbcc
 	@echo init done.
 
 # bootblok.s is the source of the MINIX boot block.  The bootblock is the
@@ -43,7 +46,7 @@ mkfs:	mkfs.c
 	@echo mkfs done.
 
 fsck:	fsck.o fsck1.o
-	@ld86 -m -L/usr/lib/bcc/  -o fsck fsck1.o fsck.o $l/libc.a  -lbcc 
+	@ld86 -0 -s -m -L/usr/lib/bcc/  -o fsck fsck1.o fsck.o $l/libc.a  -lbcc 
 	@echo fsck done.
 fsck1.o:	fsck1.asm
 	nasm -DSTANDALONE -f as86 -o fsck1.o fsck1.asm

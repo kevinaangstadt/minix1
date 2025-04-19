@@ -34,7 +34,7 @@ back:
     pop cx
     pop bx
     pop ax
-    add sp, 2        ; remove signal number from stack
+    pop word [dummy]      ; remove signal number from stack
     iret
 
 section .data

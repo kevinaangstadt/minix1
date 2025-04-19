@@ -6,7 +6,7 @@ _start:
 begtext:
     jmp L0
     times 7 dw 0       ; kernel uses this area as stack for initial IRET
-L0: mov sp, _stackpt
+L0: mov sp, [_stackpt]
     call _main
 L1: jmp L1             ; this will never be executed
 _exit: jmp _exit       ; this will never be executed either
