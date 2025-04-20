@@ -14,10 +14,11 @@ cpu 8086
 ; last two words in the boot block. 
 ;
 ; Summary of the words patched into the boot block by build:
-; Word at 504: # sectors to load
-; Word at 506: # DS value for fsck
-; Word at 508: # PC value for fsck
-; Word at 510: # CS value for fsck
+; Word at 502: # sectors to load
+; Word at 504: # DS value for fsck
+; Word at 506: # PC value for fsck
+; Word at 508: # CS value for fsck
+; Word at 510: # Magic number (0xAA55) to indicate a boot block
 ;
 ; This version of the boot block must be assembled without separate I & D
 ; space.
@@ -27,10 +28,10 @@ cpu 8086
 %define BOOTSEG 0x2FE0         ; here it will copy itself (192K-512b)
 %define DSKBASE 120            ; 120 = 4 * 0x1E = ptr to disk parameters
 
-%define final   504
-%define fsck_ds 506
-%define fsck_pc 508
-%define fsck_cs 510
+%define final   502
+%define fsck_ds 504
+%define fsck_pc 506
+%define fsck_cs 508
 
 global begtext, begdata, begbss, endtext, enddata, endbss  ; asld needs these
 

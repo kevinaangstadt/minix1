@@ -18,11 +18,12 @@
  * After the boot image has been built, build goes back and makes several
  * patches to the image file or diskette:
  *
- *      1. The last 4 words of the boot block are set as follows:
- *	   Word at 504:	Number of sectors to load
- *	   Word at 506:	DS value for running fsck
- *	   Word at 508:	PC value for starting fsck
- *	   Word at 510:	CS value for running fsck
+ *      1. The last 5 words of the boot block are set as follows:
+ *	   Word at 502:	Number of sectors to load
+ *	   Word at 504:	DS value for running fsck
+ *	   Word at 506:	PC value for starting fsck
+ *	   Word at 508:	CS value for running fsck
+ *     Word at 510: Magic number to identify the boot block.
  *
  *	2. Build writes a table into the first 8 words of the kernel's
  *	   data space.  It has 4 entries, the cs and ds values for each
@@ -331,8 +332,8 @@ patch1(all_size)
 int32_t all_size;
 {
 /* Put the ip and cs values for fsck in the last two words of the boot blk.
- * If fsck is sep I&D we must also provide the ds-value (addr. 506).
- * Put in bootblok-offset 504 the number of sectors to load.
+ * If fsck is sep I&D we must also provide the ds-value (addr. 504).
+ * Put in bootblok-offset 502 the number of sectors to load.
  */
 
   int32_t fsck_org;
@@ -351,10 +352,11 @@ int32_t all_size;
   sectrs = (unsigned) (all_size / 512L);
 
   read_block(0, ubuf);          /* read in boot block */
-  ubuf[(SECTOR_SIZE/2) - 4] = sectrs + 1;
-  ubuf[(SECTOR_SIZE/2) - 3] = ds;
-  ubuf[(SECTOR_SIZE/2) - 2] = ip;
-  ubuf[(SECTOR_SIZE/2) - 1] = cs;
+  ubuf[(SECTOR_SIZE/2) - 5] = sectrs + 1;
+  ubuf[(SECTOR_SIZE/2) - 4] = ds;
+  ubuf[(SECTOR_SIZE/2) - 3] = ip;
+  ubuf[(SECTOR_SIZE/2) - 2] = cs;
+  ubuf[(SECTOR_SIZE/2) - 1] = 0xAA55; /* magic number */
   write_block(0, ubuf);
 }
 
