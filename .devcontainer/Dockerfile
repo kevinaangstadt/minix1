@@ -5,6 +5,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
       build-essential \
       coreutils \
       curl \
+      fdisk \
       file \
       gcc-doc \
       git \
