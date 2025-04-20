@@ -41,8 +41,8 @@ build:	build.c
 	@echo build done.
 
 mkfs:	mkfs.c
-	cc -std=c90 -DUNIX -c mkfs.c
-	cc -o mkfs mkfs.o
+	cc -g -fno-stack-protector -std=c90 -DUNIX -c mkfs.c
+	cc -g -o mkfs mkfs.o
 	@echo mkfs done.
 
 fsck:	fsck.o fsck1.o

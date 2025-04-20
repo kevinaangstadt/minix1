@@ -29,14 +29,15 @@
 #ifdef UNIX
 #include <stdio.h>
 #include <sys/types.h>
-/* #include <sys/stat.h> */ 
-#include "../include/stat.h""
+#include <sys/stat.h>
+#include <stdint.h>
 #define COMPILERFLAG
 #endif
 
 #ifndef COMPILERFLAG
 #include "stdio.h"
 #include "stat.h"
+#include "stdint.h"
 #endif
 
 
@@ -70,15 +71,15 @@
 #endif
 
 
-int next_zone, next_inode, zone_size, zone_shift=0, zoff, nrblocks,inode_offset,
+int16_t next_zone, next_inode, zone_size, zone_shift=0, zoff, nrblocks,inode_offset,
     nrinodes, lct=1, disk, fd, print=0, file=0, override=0, simple=0;
 
-long current_time;
+int32_t current_time;
 char zero[BLOCK_SIZE], *lastp;
 char umap[(N_BLOCKS+8)/8];	/* bit map tells if block read yet */
 
 FILE *proto;
-long lseek();
+int32_t lseek();
 char *size_fmt = "%6D";
 char *ldfmt = "%6ld";
 char *mode_fmt = "%6o";
@@ -87,21 +88,47 @@ char gwarning[] = {65,46,83,46,84,97,110,101,110,98,97,117,109,10};
 
 /* MS-DOS and PC-IX use %ld for longs, MINIX uses %D */
 
-
+/* Forward declarations */
+super(zones, inodes);
+rootdir(inode);
+eat_dir(parent);
+eat_file(inode, f);
+enter_dir(parent, name, child);
+add_zone(n, z, bytes, cur_time);
+incr_link(n);
+incr_size(n,count);
+int16_t alloc_inode(mode, usrid, grpid);
+int16_t alloc_zone();
+insert_bit(block, bit, count);
+int16_t mode_con(p);
+getline(line, parse);
+int32_t file_time(f);
+pexit(s);
+copy (from, to, count);
+print_fs();
+int16_t read_and_set(n);
+mx_read (blocknr,buf);
+mx_write (blocknr,buf);
+dexit (s,sectnum,err);
+special (string);
+get_block(n, buf);
+put_block(n, buf);
+flush();
+cache_init();
 
 /*================================================================
  *                    mkfs  -  make filesystem
  *===============================================================*/
 
 main(argc, argv)
-int argc;
+int16_t argc;
 char *argv[];
 {
-  int i, blocks, zones, inodes, mode, usrid, grpid, badusage = 0;
+  int16_t i, blocks, zones, inodes, mode, usrid, grpid, badusage = 0;
   char *token[MAX_TOKENS], buf[BLOCK_SIZE];
-  int testb[2];
+  int16_t testb[2];
   FILE *fopen();
-  long time(), ls;
+  int32_t time(), ls;
   struct stat statbuf;
 
   /* process parameters and switches */
@@ -109,7 +136,11 @@ char *argv[];
   current_time = time(0L);
   if (argc != 3 && argc != 4)  badusage = 1;
   if (stat(argv[argc - 1], &statbuf) == 0) {
-	if ( (statbuf.st_mode&S_IFMT) != S_IFREG) badusage = 1;
+    #ifdef UNIX
+    if (!S_ISREG(statbuf.st_mode)) badusage = 1;
+    #else
+    if ( (statbuf.st_mode&S_IFMT) != S_IFREG) badusage = 1;
+    #endif 
   }
   if (badusage) {
 	write(2, "Usage: mkfs [-L] special proto\n", 31);
@@ -221,11 +252,11 @@ char *argv[];
  *===============================================================*/
 
 super(zones, inodes)
-int zones, inodes;
+int16_t zones, inodes;
 {
 
-  int i, inodeblks, initblks, initzones, nrzones;
-  long zo;
+  int16_t i, inodeblks, initblks, initzones, nrzones;
+  int32_t zo;
   struct super_block *sup;
   char buf[BLOCK_SIZE], *cp;
 
@@ -276,9 +307,9 @@ int zones, inodes;
  *===============================================================*/
 
 rootdir(inode)
-int inode;
+int16_t inode;
 {
-  int z;
+  int16_t z;
 
   z = alloc_zone();
   add_zone (inode, z, 32L, current_time);
@@ -297,13 +328,13 @@ int inode;
  *===============================================================*/
 
 eat_dir(parent)
-int parent;	/* parent's inode nr */
+int16_t parent;	/* parent's inode nr */
 {
   /*Read prototype lines and set up directory. Recurse if need be. */
   char *token[MAX_TOKENS], *p;
   char line[LINE_LEN];
-  int mode, n, usrid, grpid, z, major, minor, f;
-  long size;
+  int16_t mode, n, usrid, grpid, z, major, minor, f;
+  int32_t size;
 
   while (1) {
 	getline(line, token);
@@ -359,11 +390,11 @@ int parent;	/* parent's inode nr */
 
 /* zonesize >= blocksize */
 eat_file(inode, f)
-int inode, f;
+int16_t inode, f;
 {
-  int z, ct, i, j, k;
+  int16_t z, ct, i, j, k;
   char buf[BLOCK_SIZE];
-  extern long file_time();
+  extern int32_t file_time();
 
   do {
      for (i=0, j=0; i < zone_size; i++, j+=ct ) {
@@ -387,15 +418,15 @@ int inode, f;
  *===============================================================*/
 
 enter_dir(parent, name, child)
-int parent, child; 		/* inode nums */
+int16_t parent, child; 		/* inode nums */
 char *name;
 {
   /* enter child in parent directory */
   /* works for dir > 1 block and zone > block */
-  int i, j, k, l, b, z, off;
+  int16_t i, j, k, l, b, z, off;
   char *p1, *p2;
   struct {
-	short inumb;
+	int16_t inumb;
 	char name[14];
   } dir_entry[NR_DIR_ENTRIES];
 
@@ -441,12 +472,12 @@ char *name;
 
 
 add_zone(n, z, bytes, cur_time)
-int n, z;
-long bytes, cur_time;
+int16_t n, z;
+int32_t bytes, cur_time;
 {
   /* add zone z to inode n. The file has grown by 'bytes' bytes. */
 
-  int b, off, blk[INTS_PER_BLOCK], indir, i;
+  int16_t b, off, blk[INTS_PER_BLOCK], indir, i;
   d_inode *p;
   d_inode inode[INODES_PER_BLOCK];
 
@@ -483,10 +514,10 @@ long bytes, cur_time;
 
 
 incr_link(n)
-int n;
+int16_t n;
 {
   /* increment the link count to inode n */
-  int b, off;
+  int16_t b, off;
   d_inode inode[INODES_PER_BLOCK];
 
   b = ((n-1)/INODES_PER_BLOCK) + inode_offset;
@@ -500,11 +531,11 @@ int n;
 
 
 incr_size(n,count)
-int n;
-long count;
+int16_t n;
+int32_t count;
 {
   /* increment the file-size in inode n */
-  int b, off;
+  int16_t b, off;
   d_inode inode[INODES_PER_BLOCK];
 
   b = ((n-1)/INODES_PER_BLOCK) + inode_offset;
@@ -521,10 +552,10 @@ long count;
  * 	 	     allocation assist group
  *===============================================================*/
 
-int alloc_inode(mode, usrid, grpid)
-int mode, usrid, grpid;
+int16_t alloc_inode(mode, usrid, grpid)
+int16_t mode, usrid, grpid;
 {
-  int num, b, off;
+  int16_t num, b, off;
   d_inode inode[INODES_PER_BLOCK];
 
   num = next_inode++;
@@ -545,11 +576,11 @@ int mode, usrid, grpid;
 
 
 
-int alloc_zone()
+int16_t alloc_zone()
 {
   /* allocate a new zone */
   /* works for zone > block */
-  int b,z,i;
+  int16_t b,z,i;
 
   z = next_zone++;
   b = z << zone_shift;
@@ -565,10 +596,10 @@ int alloc_zone()
 
 
 insert_bit(block, bit, count)
-int block, bit, count;
+int16_t block, bit, count;
 {
   /* insert 'count' bits in the bitmap */
-  int w,s, i;
+  int16_t w,s, i;
   char buf[BLOCK_SIZE];
 
   get_block(block, buf);
@@ -587,11 +618,11 @@ int block, bit, count;
  * 		proto-file processing assist group
  *===============================================================*/
 
-int mode_con(p)
+int16_t mode_con(p)
 char *p;
 {
   /* convert string to mode */
-  int o1, o2, o3, mode;
+  int16_t o1, o2, o3, mode;
   char c1, c2, c3;
 
   c1 = *p++;
@@ -617,7 +648,7 @@ char *parse[MAX_TOKENS];
 char line[LINE_LEN];
 {
   /* read a line and break it up in tokens */
-  int k;
+  int16_t k;
   char c, *p;
 
   for (k = 0; k < MAX_TOKENS; k++) parse[k] = 0;
@@ -655,8 +686,8 @@ char line[LINE_LEN];
  *===============================================================*/
 
 
-long file_time(f)
-int f;
+int32_t file_time(f)
+int16_t f;
 {
 #ifdef UNIX
   struct stat statbuf;
@@ -686,7 +717,7 @@ char *s;
 
 copy (from, to, count)
 char *from, *to;
-int count;
+int16_t count;
 {
   while (count--) *to++ = *from++;
 }
@@ -695,11 +726,11 @@ int count;
 print_fs()
 {
 
-  int i, j, k;
+  int16_t i, j, k;
   d_inode inode[INODES_PER_BLOCK];
-  int ibuf[INTS_PER_BLOCK], b;
+  int16_t ibuf[INTS_PER_BLOCK], b;
   struct {
-	short inum;
+	int16_t inum;
 	char name[14];
   } dir[NR_DIR_ENTRIES];
 
@@ -720,7 +751,7 @@ print_fs()
 	k = INODES_PER_BLOCK * (b - 4) + i + 1;
 	if (k > nrinodes) break;
 	if (inode[i].i_mode != 0) {
-	   printf("Inode %2d:  mode=",k, inode[i].i_mode);
+	   printf("Inode %2d:  mode=%d",k, inode[i].i_mode);
 	   printf(mode_fmt, inode[i].i_mode);
 	   printf("  uid=%2d  gid=%2d  size=",
 				inode[i].i_uid, inode[i].i_gid);
@@ -742,14 +773,14 @@ print_fs()
 }
 
 
-int read_and_set(n)
-int n;
+int16_t read_and_set(n)
+int16_t n;
 {
 /*  The first time a block is read, it returns alls 0s, unless there has
  *  been a write.  This routine checks to see if a block has been accessed.
  */
 
-  int w, s, mask, r;
+  int16_t w, s, mask, r;
  
   w = n/8;
   s = n%8;
@@ -807,9 +838,9 @@ char *derrtab[14] = {
 
 struct cache {
   char blockbuf[BLOCK_SIZE];
-  int  blocknum;
-  int  dirty;
-  int  usecnt;
+  int16_t  blocknum;
+  int16_t  dirty;
+  int16_t  usecnt;
 } cache[CACHE_SIZE];
 
 
@@ -835,7 +866,7 @@ char *string;
 
 
 get_block(n, buf)
-int n;
+int16_t n;
 char buf[BLOCK_SIZE];
 {
   /* get a block to the user */
@@ -879,7 +910,7 @@ char buf[BLOCK_SIZE];
 
 
 put_block(n, buf)
-int n;
+int16_t n;
 char buf[BLOCK_SIZE];
 {
   /* Accept block from user */
@@ -947,13 +978,13 @@ flush ()
 
 
 mx_read (blocknr,buf)
-int blocknr;
+int16_t blocknr;
 char buf[BLOCK_SIZE];
 {
 
   /* read the requested MINIX-block in core */
   char (*bp)[PH_SECTSIZE];
-  int sectnum,retries,err;
+  int16_t sectnum,retries,err;
 
   if (file) {
      lseek (fd, (long) blocknr * BLOCK_SIZE, 0);
@@ -980,12 +1011,12 @@ char buf[BLOCK_SIZE];
 
 
 mx_write (blocknr,buf)
-int blocknr;
+int16_t blocknr;
 char buf[BLOCK_SIZE];
 {
   /* write the MINIX-block to disk */
   char (*bp)[PH_SECTSIZE];
-  int retries,sectnum,err;
+  int16_t retries,sectnum,err;
 
   if (file) {
      lseek (fd, blocknr * BLOCK_SIZE, 0);
@@ -1012,7 +1043,7 @@ char buf[BLOCK_SIZE];
 
 
 dexit (s,sectnum,err)
-int sectnum, err;
+int16_t sectnum, err;
 char *s;
 {
   printf ("Error: %s, sector: %d, code: %d, meaning: %s\n",
@@ -1041,12 +1072,12 @@ char *string;
 
 
 get_block(n, buf)
-int n;
+int16_t n;
 char buf[BLOCK_SIZE];
 {
 /* Read a block. */
 
-  int k;
+  int16_t k;
 
   /* First access returns a zero block */
   if (read_and_set(n) == 0) {
@@ -1064,7 +1095,7 @@ char buf[BLOCK_SIZE];
 
 
 put_block(n, buf)
-int n;
+int16_t n;
 char buf[BLOCK_SIZE];
 {
 /* Write a block. */
