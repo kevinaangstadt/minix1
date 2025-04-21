@@ -115,6 +115,7 @@ PUBLIC winchester_task()
 /* Main program of the winchester disk driver task. */
 
   int r, caller, proc_nr;
+  printf("winchester task started\n");
 
   /* First initialize the controller */
   init_params();
@@ -132,6 +133,8 @@ PUBLIC winchester_task()
 	}
 	caller = w_mess.m_source;
 	proc_nr = w_mess.PROC_NR;
+
+  printf("winchester task got message from %d\n", caller);
 
 	/* Now carry out the work. */
 	switch(w_mess.m_type) {
@@ -161,6 +164,9 @@ message *m_ptr;			/* pointer to read or write w_message */
   int r, device, errors = 0;
   long sector;
 
+  printf("w_do_rdwt: device %d, proc %d, count %d, position %d, nr_drives %d\n",
+    m_ptr->DEVICE, m_ptr->PROC_NR, m_ptr->COUNT, m_ptr->POSITION, nr_drives);
+
   /* Decode the w_message parameters. */
   device = m_ptr->DEVICE;
   if (device < 0 || device >= NR_DEVICES)
@@ -184,6 +190,9 @@ message *m_ptr;			/* pointer to read or write w_message */
   wn->wn_count = m_ptr->COUNT;
   wn->wn_address = (vir_bytes) m_ptr->ADDRESS;
   wn->wn_procnr = m_ptr->PROC_NR;
+
+  printf("cylinder %d, sector %d, head %d, count %d\n",
+    wn->wn_cylinder, wn->wn_sector, wn->wn_head, wn->wn_count);
 
   /* This loop allows a failed operation to be repeated. */
   while (errors <= MAX_ERRORS) {
