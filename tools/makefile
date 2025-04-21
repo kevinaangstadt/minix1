@@ -61,6 +61,11 @@ image:	 build bootblok ../kernel/kernel ../mm/mm ../fs/fs init fsck
 	@./build bootblok ../kernel/kernel ../mm/mm ../fs/fs init fsck  image
 	cp image /dev/fd0
 
+minix:  image 
+	dd if=image of=minix.img bs=446 conv=notrunc count=1
+	dd if=image of=minix.img bs=1 seek=502 skip=502 count=10 conv=notrunc
+	dd if=image of=minix.img bs=512 seek=1 skip=1 conv=notrunc
+
 # 'make usr' builds a file system on a file called 'usr', and then
 # copies this file to the diskette (9 sectors per track).  It builds the file
 # system using the program mkfs, which is functionally the same as the standard

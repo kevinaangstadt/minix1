@@ -60,9 +60,9 @@ start:
     mov sp, 1024         ; initialize sp (top of vector table)
 
 ; initialize disk parameters
-    mov ax, atpar        ; tentatively assume 1.2M diskette
-    mov [es:DSKBASE], ax
-    mov [es:DSKBASE+2], dx
+    ; mov ax, atpar        ; tentatively assume 17 sector harddisk
+    ; mov [es:DSKBASE], ax
+    ; mov [es:DSKBASE+2], dx
 
 ; print greeting
     mov ax, 2            ; reset video
@@ -74,25 +74,40 @@ start:
     mov bx, greet
     call print
 
-; Determine if this is a 1.2M diskette by trying to read sector 15.
-    xor ax, ax
-    int 0x13
-    xor ax, ax
-    mov es, ax
-    mov ax, 0x0201
-    mov bx, 0x0600
-    mov cx, 0x000F
-    mov dx, 0x0000
-    int 0x13
-    jnb L1
+; ; Determine if this is a 1.2M diskette by trying to read sector 15.
+;     xor ax, ax
+;     int 0x13
+;     xor ax, ax
+;     mov es, ax
+;     mov ax, 0x0201
+;     mov bx, 0x0600
+;     mov cx, 0x000F
+;     mov dx, 0x0000
+;     int 0x13
+;     jnb L1
 
-; Error. It wasn't 1.2M. Now set up for 360K.
-    mov word [tracksiz], 9    ; 360K uses 9 sectors/track
+; ; Error. It wasn't 1.2M. Now set up for 360K.
+;     mov word [tracksiz], 9    ; 360K uses 9 sectors/track
+;     xor ax, ax
+;     mov es, ax
+;     mov ax, pcpar
+;     mov [es:DSKBASE], ax
+;     int 0x13             ; diskette reset
+
+; reset the hard disk
     xor ax, ax
-    mov es, ax
-    mov ax, pcpar
-    mov [es:DSKBASE], ax
-    int 0x13             ; diskette reset
+    mov dl, 0x80
+    int 0x13             ; reset hard disk
+
+    ; DEBUG test loading one sector
+    ; mov ax, 0x0060
+    ; mov es, ax
+    ; mov ax, 0x0201
+    ; xor bx, bx
+    ; mov cx, 0x0002
+    ; mov dx, 0x0080
+    ; int 0x13
+
 L1:
 
 ; Load the operating system from diskette.
@@ -116,9 +131,9 @@ load:
     jb load              ; jump if there is more to load
 
 ; Loading done. Finish up.
-    mov dx, 0x03F2       ; kill the motor
-    mov ax, 0x000C
-    out dx, ax
+    ; mov dx, 0x03F2       ; kill the motor
+    ; mov ax, 0x000C
+    ; out dx, ax
     cli
     mov bx, [tracksiz]   ; fsck expects # sectors/track in bx
     mov ax, [fsck_ds]    ; set segment registers
@@ -130,9 +145,9 @@ load:
 
 ; Given the number of the next disk block to read, disksec, compute the
 ; cylinder, sector, head, and number of sectors to read as follows:
-; ah = # sectors to read; cl = sector #; ch = cyl; dh = head; dl = 0
+; al = # sectors to read; cl = sector #; ch = cyl; dh = head; dl = 80
 setreg: 
-    mov si, [tracksiz]   ; 9 (PC) or 15 (AT) sectors per track
+    mov si, [tracksiz]   ; 17 sectors/track for hard disk image
     mov ax, [disksec]    ; ax = next sector to read
     xor dx, dx           ; dx:ax = 32-bit dividend
     div si               ; divide sector # by track size
@@ -169,12 +184,15 @@ set2:
     mov ax, si           ; ax = number of sectors to read
     xor dx, dx           ; dh = head, dl = drive
     mov dh, cl           ; dh = track
-    and dh, 1            ; dh = head
+    and dh, 0xF          ; dh = head
     mov ch, cl           ; ch = track to read
-    shr ch, 1            ; ch = cylinder
+    shr ch, 1            ; ch = cylinder (divide by 16)
+    shr ch, 1            ; ditto
+    shr ch, 1            ; ditto
+    shr ch, 1            ; ditto
     mov cl, bl           ; cl = sector number (0-origin)
     inc cl               ; cl = sector number (1-origin)
-    xor dl, dl           ; dl = drive number (0)
+    mov dl, 0x80         ; dl = drive number (0)
     ret                  ; return values in ax, cx, dx
 
 ;-------------------------------+
@@ -183,6 +201,10 @@ set2:
 
 error:
     push ax
+    mov [dbg], ah
+    add byte [dbg], 0x30
+    mov bx, dbg
+    call print
     mov bx, fderr
     call print           ; print msg
     xor cx, cx
@@ -208,12 +230,13 @@ prt1:
 
 section .data
 disksec: dw 1
-tracksiz: dw 15          ; changed to 9 for 360K diskettes
+tracksiz: dw 17          ; 17 sectors/track for Hard Disk Image
 pcpar: db 0xDF, 0x02, 25, 2, 9, 0x2A, 0xFF, 0x50, 0xF6, 1, 3   ; for PC
 atpar: db 0xDF, 0x02, 25, 2, 15, 0x1B, 0xFF, 0x54, 0xF6, 1, 8  ; for AT
 
 fderr: db "Read error.  Automatic reboot.", 13, 10, 0
 greet: db 13, "Booting MINIX 1.1", 13, 10, 0
+dbg: db 0,0
 
 section .bss
 begbss:
