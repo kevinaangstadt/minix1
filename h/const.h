@@ -60,7 +60,7 @@
 
 /* Device numbers of root (RAM) and boot (fd0) devices. */
 #define ROOT_DEV (dev_nr)   256	/* major-minor device number of root dev */
-#define BOOT_DEV (dev_nr)   512	/* major-minor device number of boot diskette */
+#define BOOT_DEV (dev_nr) 0x0301	/* major-minor device number of boot diskette */
 
 /* Flag bits for i_mode in the inode. */
 #define I_TYPE          0170000	/* this field gives inode type */
