@@ -95,7 +95,7 @@ PUBLIC winchester_task()
   int r, caller, proc_nr;
 
   /* First initialize the controller */
-  init_param();
+  init_params();
 
   /* Here is the main loop of the disk task.  It waits for a message, carries
    * it out, and sends a reply.
@@ -419,7 +419,7 @@ PRIVATE init_params()
   phys_copy(address, umap(proc_addr(WINCHESTER), D, buf, 16), 16L);
 
   /* Copy the parameters to the structures */
-  copy_param(buf, &wini[0]);
+  copy_params(buf, &wini[0]);
 
   /* Copy the parameter vector from the saved vector table */
   offset = vec_table[2 * 0x46];
@@ -430,7 +430,7 @@ PRIVATE init_params()
   phys_copy(address, umap(proc_addr(WINCHESTER), D, buf, 16), 16L);
 
   /* Copy the parameters to the structures */
-  copy_param(buf, &wini[5]);
+  copy_params(buf, &wini[5]);
 
   /* Get the nummer of drives from the bios */
   phys_copy(0x475L, umap(proc_addr(WINCHESTER), D, buf, 1), 1L);
