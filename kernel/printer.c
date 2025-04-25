@@ -245,7 +245,7 @@ PUBLIC pr_char()
   char c;
   extern char get_byte();
 
-  if (pcount != orig_count) port_out(INT_CTL, ENABLE);
+  /* if (pcount != orig_count) port_out(INT_CTL, ENABLE);*/
   if (pr_busy == FALSE) return;	/* spurious 8259A interrupt */
 
   while (pcount > 0) {

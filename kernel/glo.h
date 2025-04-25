@@ -19,4 +19,7 @@ EXTERN struct t_stack {
   int stk[TASK_STACK_BYTES/sizeof(int)];
 } t_stack[NR_TASKS - 1];	/* task stacks; task = -1 never really runs */
 
+/* MISC */
+EXTERN unsigned int Ax, Bx, Cx, Dx, Es;	/* to hold registers for BIOS calls */
+
 EXTERN char k_stack[K_STACK_BYTES];	/* The kernel stack. */

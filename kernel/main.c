@@ -44,7 +44,7 @@ PUBLIC main()
   phys_clicks base_click, mm_base, previous_base;
   phys_bytes phys_b;
   extern unsigned sizes[8];	/* table filled in by build */
-  extern int color, vec_table[], get_chrome(), (*task[])();
+  extern int vec_table[], (*task[])();
   extern int s_call(), disk_int(), tty_int(), clock_int(), disk_int();
   extern int wini_int(), lpr_int(), surprise(), trp(), divide();
   extern phys_bytes umap();
@@ -110,10 +110,7 @@ PUBLIC main()
   for (rp = proc_addr(LOW_USER+1); rp < proc_addr(NR_PROCS); rp++)
 	rp->p_flags = P_SLOT_FREE;
 
-  /* Determine if display is color or monochrome and CPU type (from BIOS). */
-  color = get_chrome();		/* 0 = mono, 1 = color */
-  t = get_byte(CPU_TY1, CPU_TY2);	/* is this PC, XT, AT ... ? */
-  if (t == PC_AT) pc_at = TRUE;
+  pc_at = FALSE;		/* assume we are not on an AT */
 
   /* Save the old interrupt vectors. */
   phys_b = umap(proc_addr(HARDWARE), D, (vir_bytes) vec_table, VECTOR_BYTES);
@@ -137,7 +134,7 @@ PUBLIC main()
   pick_proc();
 
   /* Now go to the assembly code to start running the current process. */
-  port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
+  /* FIXME port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
 
   restart();
 }

@@ -152,49 +152,6 @@ PRIVATE int control, alt;	/* keep track of key statii */
 PUBLIC  int color;		/* 1 if console is color, 0 if it is mono */
 PUBLIC scan_code;		/* scan code for '=' saved by bootstrap */
 
-/* Scan codes to ASCII for unshifted keys */
-PRIVATE char unsh[] = {
- 0,033,'1','2','3','4','5','6',        '7','8','9','0','-','=','\b','\t',
- 'q','w','e','r','t','y','u','i',      'o','p','[',']',015,0202,'a','s',
- 'd','f','g','h','j','k','l',';',      047,0140,0200,0134,'z','x','c','v',
- 'b','n','m',',','.','/',0201,'*',     0203,' ',0204,0241,0242,0243,0244,0245,
- 0246,0247,0250,0251,0252,0205,0210,0267,  0270,0271,0211,0264,0265,0266,0214
-,0261,  0262,0263,'0',0177
-};
-
-/* Scan codes to ASCII for shifted keys */
-PRIVATE char sh[] = {
- 0,033,'!','@','#','$','%','^',        '&','*','(',')','_','+','\b','\t',
- 'Q','W','E','R','T','Y','U','I',      'O','P','{','}',015,0202,'A','S',
- 'D','F','G','H','J','K','L',':',      042,'~',0200,'|','Z','X','C','V',
- 'B','N','M','<','>','?',0201,'*',    0203,' ',0204,0221,0222,0223,0224,0225,
- 0226,0227,0230,0231,0232,0204,0213,'7',  '8','9',0211,'4','5','6',0214,'1',
- '2','3','0',177
-};
-
-
-/* Scan codes to ASCII for Olivetti M24 for unshifted keys. */
-PRIVATE char unm24[] = {
- 0,033,'1','2','3','4','5','6',        '7','8','9','0','-','^','\b','\t',
- 'q','w','e','r','t','y','u','i',      'o','p','@','[','\r',0202,'a','s',
- 'd','f','g','h','j','k','l',';',      ':',']',0200,'\\','z','x','c','v',
- 'b','n','m',',','.','/',0201,'*',     0203,' ',0204,0241,0242,0243,0244,0245,
- 0246,0247,0250,0251,0252,023,0210,0267,0270,0271,0211,0264,0265,0266,0214,0261,
-0262,0263,'0','.',' ',014,0212,'\r',   0264,0262,0266,0270,032,0213,' ','/',
- 0253,0254,0255,0256,0257,0215,0216,0217
-};
-
-/* Scan codes to ASCII for Olivetti M24 for shifted keys. */
-PRIVATE char m24[] = {
- 0,033,'!','"','#','$','%','&',        047,'(',')','_','=','~','\b','\t',
- 'Q','W','E','R' ,'T','Y','U','I',     'O','P',0140,'{','\r',0202,'A','S',
- 'D','F','G','H','J','K','L','+',      '*','}',0200,'|','Z','X','C','V',
- 'B','N','M','<','>','?',0201,'*',     0203,' ',0204,0221,0222,0223,0224,0225,
- 0226,0227,0230,0231,0232,0270,023,'7', '8','9',0211,'4','5','6',0214,'1',
- '2','3',0207,0177,0271,014,0272,'\r', '\b','\n','\f',036,032,0273,0274,'/',
- 0233,0234,0235,0236,0237,0275,0276,0277
-};
-
 
 /*===========================================================================*
  *				tty_task				     *
@@ -405,42 +362,7 @@ char ch;			/* scan code of key just struck or released */
  * For efficiency, the interrupt routine filters out most key releases.
  */
 
-  int c, make, code;
-
-
-  c = ch & 0177;		/* high-order bit set on key release */
-  make = (ch & 0200 ? 0 : 1);	/* 1 when key depressed, 0 when key released */
-  if (olivetti == FALSE) {
-	/* Standard IBM keyboard. */
-	code = (shift1 || shift2 || capslock ? sh[c] : unsh[c]);
-	if (control && c < TOP_ROW) code = sh[c];	/* CTRL-(top row) */
-	if (c > 70 && numlock) code = sh[c];	/* numlock depressed */
-  } else {
-	/* (Olivetti M24 or AT&T 6300) with Olivetti-style keyboard. */
-	code = (shift1 || shift2 || capslock ? m24[c] : unm24[c]);
-	if (control && c < TOP_ROW) code = sh[c];	/* CTRL-(top row) */
-	if (c > 70 && numlock) code = m24[c];	/* numlock depressed */
-  }
-  code &= BYTE;
-  if (code < 0200 || code >= 0206) {
-	/* Ordinary key, i.e. not shift, control, alt, etc. */
-	if (alt) code |= 0200;	/* alt key ORs 0200 into code */
-	if (control) code &= 037;
-	if (code == 0) code = AT_SIGN;	/* @ is 0100, so CTRL-@ = 0 */
-	if (make == 0) code = 0;	/* key release */
-	return(code);
-  }
-
-  /* Table entries 0200 - 0206 denote special actions. */
-  switch(code - 0200) {
-    case 0:	shift1 = make;		break;	/* shift key on left */
-    case 1:	shift2 = make;		break;	/* shift key on right */
-    case 2:	control = make;		break;	/* control */
-    case 3:	alt = make;		break;	/* alt key */
-    case 4:	if (make) capslock = 1 - capslock; break;	/* caps lock */
-    case 5:	if (make) numlock  = 1 - numlock;  break;	/* num lock */
-  }
-  return(0);
+  return ch;
 }
 #endif
 
@@ -776,16 +698,18 @@ long other;			/* used for IOCTL replies */
 #define BLANK         0x0700	/* determines  cursor color on blank screen */
 #define LINE_WIDTH        80	/* # characters on a line */
 #define SCR_LINES         25	/* # lines on the screen */
-#define CTRL_S            31	/* scan code for letter S (for CRTL-S) */
+#define CTRL_S            19	/* ASCII for CRTL-S */
 #define MONOCHROME         1	/* value for tty_ioport tells color vs. mono */
 #define CONSOLE            0	/* line number for console */
 #define GO_FORWARD         0	/* scroll forward */
 #define GO_BACKWARD        1	/* scroll backward */
-#define TIMER2          0x42	/* I/O port for timer channel 2 */
-#define TIMER3          0x43	/* I/O port for timer channel 3 */
-#define KEYBD           0x60	/* I/O port for keyboard data */
-#define PORT_B          0x61	/* I/O port for 8255 port B */
-#define KBIT            0x80	/* bit used to ack characters to keyboard */
+#define TIMERCTL        0x2003	/* I/O port for timer control */
+#define TIMER3          0x2002	/* I/O port for timer channel 3 */
+#define KEYBD           0x6000	/* I/O port for keyboard data */
+#define UART_DATA       KEYBD
+#define LSR             0x6005  /* I/O port for UART status */
+#define LSR_READY       0x20	/* LSR bit for data ready */
+#define PORT_A          0x4000	/* I/O port for PIO control register A */
 
 /* Constants relating to the video RAM and 6845. */
 #define M_6845         0x3B0	/* port for 6845 mono */
@@ -819,27 +743,13 @@ PUBLIC keyboard()
 {
 /* A keyboard interrupt has occurred.  Process it. */
 
-  int val, code, k, raw_bit;
+  int val, ch, k, raw_bit;
   char stopc;
 
   /* Fetch the character from the keyboard hardware and acknowledge it. */
-  port_in(KEYBD, &code);	/* get the scan code for the key struck */
-  port_in(PORT_B, &val);	/* strobe the keyboard to ack the char */
-  port_out(PORT_B, val | KBIT);	/* strobe the bit high */
-  port_out(PORT_B, val);	/* now strobe it low */
+  port_in(KEYBD, &ch);	/* get the character for the key */
 
-  /* The IBM keyboard interrupts twice per key, once when depressed, once when
-   * released.  Filter out the latter, ignoring all but the shift-type keys.
-   * The shift-type keys, 29, 42, 54, 56, and 69 must be processed normally.
-   */
-  k = code - 0200;		/* codes > 0200 mean key release */
-  if (k > 0) {
-	/* A key has been released. */
-	if (k != 29 && k != 42 && k != 54 && k != 56 && k != 69) {
-		port_out(INT_CTL, ENABLE);	/* re-enable interrupts */
-	 	return;		/* don't call tty_task() */
-	}
-  } else {
+
 	/* Check to see if character is CTRL-S, to stop output. Setting xoff
 	 * to anything other than CTRL-S will not be detected here, but will
 	 * be detected later, in the driver.  A general routine to detect any
@@ -848,21 +758,20 @@ PUBLIC keyboard()
 	 */
 	raw_bit = tty_struct[CONSOLE].tty_mode & RAW;
 	stopc = tty_struct[CONSOLE].tty_xoff;
-	if (raw_bit == 0 && control && code == CTRL_S && stopc == XOFF_CHAR) {
+	if (raw_bit == 0 && ch == CTRL_S && stopc == XOFF_CHAR) {
 		tty_struct[CONSOLE].tty_inhibited = STOPPED;
-		port_out(INT_CTL, ENABLE);
 		return;
 	}
-  }
 
+  /* FIXME ALTERNATIVE TO CTRL-ALT-DEL */
   /* Check for CTRL-ALT-DEL, and if found, reboot the computer. */
-  if (control && alt && code == DEL_CODE) reboot();	/* CTRL-ALT-DEL */
+  /* if (control && alt && code == DEL_CODE) reboot();	/* CTRL-ALT-DEL */
 
   /* Store the character in memory so the task can get at it later. */
   if ( (k = tty_driver_buf[0]) < tty_driver_buf[1]) {
 	/* There is room to store this character; do it. */
 	k = k + k;			/* each entry contains two bytes */
-	tty_driver_buf[k+2] = code;	/* store the scan code */
+	tty_driver_buf[k+2] = ch;	/* store the ascii */
 	tty_driver_buf[k+3] = CONSOLE;	/* tell which line it came from */
 	tty_driver_buf[0]++;		/* increment counter */
 
@@ -872,7 +781,6 @@ PUBLIC keyboard()
 	interrupt(TTY, &keybd_mess);	/* send a message to the tty task */
   } else {
 	/* Too many characters have been buffered.  Discard excess. */
-	port_out(INT_CTL, ENABLE);	/* re-enable 8259A controller */
   }
 }
 
@@ -931,6 +839,8 @@ char c;				/* character to be output */
  */
 
   /* Check to see if we are part way through an escape sequence. */
+  /* FIXME We're not going to do anything special for ESC*/
+  /*
   if (tp->tty_esc_state == 1) {
 	tp->tty_echar = c;
 	tp->tty_esc_state = 2;
@@ -942,6 +852,7 @@ char c;				/* character to be output */
 	tp->tty_esc_state = 0;
 	return;
   }
+  */
 
   switch(c) {
 	case 007:		/* ring the bell */
@@ -967,11 +878,10 @@ char c;				/* character to be output */
 
 	case '\n':		/* line feed */
 		if (tp->tty_mode & CRMOD) out_char(tp, '\r');
-		if (tp->tty_row == 0) 
-			scroll_screen(tp, GO_FORWARD);
-		else
+		if (tp->tty_row != 0) 
 			tp->tty_row--;
-		move_to(tp, tp->tty_column, tp->tty_row);
+    if (tp->tty_rwords == TTY_RAM_WORDS) flush(tp);
+    tp->tty_ramqueue[tp->tty_rwords++] = tp->tty_attribute | c;
 		return;
 
 	case '\r':		/* carriage return */
@@ -988,13 +898,15 @@ char c;				/* character to be output */
 		/* Ignore tab is XTABS is off--video RAM has no hardware tab */
 		return;
 
+  #if 0
 	case 033:		/* ESC - start of an escape sequence */
 		flush(tp);	/* print any chars queued for output */
 		tp->tty_esc_state = 1;	/* mark ESC as seen */
 		return;
+  #endif
 
 	default:		/* printable chars are stored in ramqueue */
-		if (tp->tty_column >= LINE_WIDTH) return;	/* long line */
+		/*if (tp->tty_column >= LINE_WIDTH) return;	/* long line */
 		if (tp->tty_rwords == TTY_RAM_WORDS) flush(tp);
 		tp->tty_ramqueue[tp->tty_rwords++] = tp->tty_attribute | c;
 		tp->tty_column++;	/* next column */
@@ -1012,16 +924,10 @@ int dir;			/* GO_FORWARD or GO_BACKWARD */
 {
   int amount, offset;
 
-  amount = (dir == GO_FORWARD ? 2 * LINE_WIDTH : -2 * LINE_WIDTH);
-  tp->tty_org = (tp->tty_org + amount) & vid_mask;
   if (dir == GO_FORWARD)
-	offset = (tp->tty_org + 2 * (SCR_LINES - 1) * LINE_WIDTH) & vid_mask;
+	out_seq(tp, "\033[1B", 4);	/* go down one line */
   else
-	offset = tp->tty_org;
-
-  /* Blank the new line at top or bottom. */
-  vid_copy(NIL_PTR, vid_base, offset, LINE_WIDTH);
-  set_6845(VID_ORG, tp->tty_org >> 1);	/* 6845 thinks in words */
+	out_seq(tp, "\033[1A", 4);	/* go up one line */
 }
 
 
@@ -1032,13 +938,17 @@ PRIVATE flush(tp)
 register struct tty_struct *tp;	/* pointer to tty struct */
 {
 /* Have the characters in 'ramqueue' transferred to the screen. */
+  int i, status;
 
   if (tp->tty_rwords == 0) return;
-  vid_copy(tp->tty_ramqueue, vid_base, tp->tty_vid, tp->tty_rwords);
-
-  /* Update the video parameters and cursor. */
-  tp->tty_vid = (tp->tty_vid + 2 * tp->tty_rwords);
-  set_6845(CURSOR, tp->tty_vid >> 1);	/* cursor counts in words */
+  for (i = 0; i < tp->tty_rwords; i++) {
+    /* wait for the system to flush a letter*/
+    do {
+      port_in(LSR, &status);
+    } while ((status & LSR_READY) == 0);    
+    /* output character */
+    port_out(UART_DATA, tp->tty_ramqueue[i] & BYTE);	/* send to video */
+  }
   tp->tty_rwords = 0;
 }
 
@@ -1052,16 +962,64 @@ int x;				/* column (0 <= x <= 79) */
 int y;				/* row (0 <= y <= 24, 0 at bottom) */
 {
 /* Move the cursor to (x, y). */
-
-  flush(tp);			/* flush any pending characters */
-  if (x < 0 || x >= LINE_WIDTH || y < 0 || y >= SCR_LINES) return;
-  tp->tty_column = x;		/* set x co-ordinate */
-  tp->tty_row = y;		/* set y co-ordinate */
-  tp->tty_vid = (tp->tty_org + 2*(SCR_LINES-1-y)*LINE_WIDTH + 2*x);
-  set_6845(CURSOR, tp->tty_vid >> 1);	/* cursor counts in words */
+  int row;
+  /* set the coordinates */
+  tp->tty_column = x;
+  tp->tty_row = y;
+  /* convert y to row*/
+  row = SCR_LINES - y;
+  out_seq(tp, "\033[", 2);	/* ESC [ */
+  outi(tp, row);		/* row */
+  out_char(tp, ';');		/* ; */
+  outi(tp, x);		/* column */
+  out_char(tp, 'H');		/* H */
 }
 
+PRIVATE outi(tp, x)
+register struct tty_struct *tp;	/* pointer to tty struct */
+int x;				/* number to convert */
+{
+  /* int to ascii output */
+  char buf[10];
+  int i = 0;
+  if (x == 0) {
+    out_char(tp, '0');
+    return;
+  }
 
+  /* Handle negative numbers */
+  if (x < 0) {
+    out_char(tp, '-');
+    x = -x;
+  }
+  
+  while (x > 0) {
+    buf[i++] = (x % 10) + '0';
+    x /= 10;
+  }
+  buf[i] = '\0';
+  while (i > 0) {
+    out_char(tp, buf[--i]);
+  }
+
+}
+
+/*===========================================================================*
+ *				out_seq				     *
+ *===========================================================================*/
+PRIVATE out_seq(tp, seq, len)
+register struct tty_struct *tp;	/* pointer to tty struct */
+char *seq;			/* sequence to be output */
+int len;			/* length of sequence */
+{
+  int i;
+  for (i = 0; i < len; i++) {
+    if (i % TTY_RAM_WORDS == 0) {
+      flush(tp);	/* flush the screen */
+    }
+    out_char(tp, seq[i]);	/* output the sequence */
+  }
+}
 /*===========================================================================*
  *				escape					     *
  *===========================================================================*/
@@ -1144,13 +1102,13 @@ int f;				/* this value determines beep frequency */
   int x, k;
 
   lock();			/* disable interrupts */
-  port_out(TIMER3,0xB6);	/* set up timer channel 2 mode */
-  port_out(TIMER2, f&BYTE);	/* load low-order bits of frequency in timer */
-  port_out(TIMER2,(f>>8)&BYTE);	/* now high-order bits of frequency in timer */
-  port_in(PORT_B,&x);		/* acquire status of port B */
-  port_out(PORT_B, x|3);	/* turn bits 0 and 1 on to beep */
+  port_out(TIMERCTL,0xB6);	/* set up timer channel 2 mode */
+  port_out(TIMER3, f&BYTE);	/* load low-order bits of frequency in timer */
+  port_out(TIMER3,(f>>8)&BYTE);	/* now high-order bits of frequency in timer */
+  port_in(PORT_A,&x);		/* acquire status of port B */
+  port_out(PORT_A, x|3);	/* turn bits 0 and 1 on to beep */
   for (k = 0; k < B_TIME; k++);	/* delay loop while beeper sounding */
-  port_out(PORT_B, x);		/* restore port B the way it was */
+  port_out(PORT_A, x);		/* restore port B the way it was */
   unlock();			/* re-enable interrupts */
 }
 

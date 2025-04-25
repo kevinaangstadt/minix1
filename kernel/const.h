@@ -16,7 +16,7 @@
 #define SS_REG            10	/* proc[i].p_reg[SSREG] is saved ss */
 
 #define VECTOR_BYTES     284	/* bytes of interrupt vectors to save */
-#define MEM_BYTES    655360L	/* memory size for /dev/mem */
+#define MEM_BYTES    524288L	/* memory size for /dev/mem */
 
 /* Interrupt vectors */
 #define DIVIDE_VECTOR      0	/* divide interrupt vector */
@@ -31,6 +31,8 @@
 #define INT_CTL       0x0000	/* I/O port for interrupt controller */
 #define INT_CTLMASK   0x0001	/* setting bits in this port disables ints */
 #endif
+
+#define NR_PARTITIONS      4	/* number of partitions on a disk */
 
 #define TASK_STACK_BYTES 256	/* how many bytes for each task stack */
 #define K_STACK_BYTES    256	/* how many bytes for the kernel stack */

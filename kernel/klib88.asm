@@ -4,6 +4,7 @@ cpu 8086
 ; This file contains a number of assembly code utility routines	needed by the
 ; kernel.  They	are:
 ;
+;   bios13: 	make BIOS 13 call for disk I/O
 ;   phys_copy:	copies data from anywhere to anywhere in memory
 ;   cp_mess:	copies messages	from source to destination
 ;   port_out:	outputs	data on	an I/O port
@@ -19,18 +20,48 @@ cpu 8086
 ;   get_byte:	reads a	byte from a user program and returns it	as value
 
 ; The following	procedures are defined in this file and	called from outside it.
-global _phys_copy, _cp_mess, _port_out, _port_in, _lock, _unlock, _restore
-global _build_sig, csv, cret, _get_chrome, _vid_copy, _get_byte, _reboot
+global _bios13, _phys_copy, _cp_mess, _port_out, _port_in, _lock, _unlock
+global _restore, _build_sig, csv, cret, _vid_copy, _get_byte, _reboot
 global _wreboot, _portw_in, _portw_out
 
 ; The following	external procedure is called in	this file.
 extern _panic
 
 ; Variables and	data structures
+extern _Ax, _Bx, _Cx, _Dx, _Es
 extern _color, _cur_proc, _proc_ptr, splimit, _vid_mask
 global _vec_table
 
 section .text
+
+;===========================================================================
+;				bios13	
+;===========================================================================
+; This routine makes a BIOS 13 call to read or write a disk sector.  It is
+; called by:
+; 	bios13()
+_bios13:
+	push ax				; save the registers
+	push bx
+	push cx
+	push dx
+	push es
+	mov ax,[_Ax]		; load parameters
+	mov bx,[_Bx]
+	mov cx,[_Cx]
+	mov dx,[_Dx]
+	mov es,[_Es]
+	int 0x13			; make the BIOS call
+	mov [_Ax],ax		; save results
+	mov [_Bx],bx
+	mov [_Cx],cx
+	mov [_Dx],dx
+	pop es
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
 
 ;===========================================================================
 ;				phys_copy
@@ -364,16 +395,16 @@ cret:
 ; This routine calls the BIOS to find out if the display is monochrome or
 ; color.  The drivers are different, as	are the	video ram addresses, so	we
 ; need to know.
-_get_chrome:
-	int 0x11			; call the BIOS	to get equipment type
-	and al,0x30			; isolate color/mono field
-	cmp al,0x30			; 0x30 is monochrome
-	je getchr1			; if monochrome	then go	to getchr1
-	mov ax,1			; color	= 1
-	ret					; color	return
-getchr1:
-	xor ax,ax			; mono = 0
-	ret					; monochrome return
+; _get_chrome:
+; 	int 0x11			; call the BIOS	to get equipment type
+; 	and al,0x30			; isolate color/mono field
+; 	cmp al,0x30			; 0x30 is monochrome
+; 	je getchr1			; if monochrome	then go	to getchr1
+; 	mov ax,1			; color	= 1
+; 	ret					; color	return
+; getchr1:
+; 	xor ax,ax			; mono = 0
+; 	ret					; monochrome return
 
 
 ;===========================================================================

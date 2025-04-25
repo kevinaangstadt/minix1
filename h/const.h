@@ -34,6 +34,8 @@
 /* Memory is allocated in clicks. */
 #define CLICK_SIZE      0020	/* unit in which memory is allocated */
 #define CLICK_SHIFT        4	/* log2 of CLICK_SIZE */
+#define physb_to_click(n) ((n) >> CLICK_SHIFT)
+#define click_to_physb(n) ((n) << CLICK_SHIFT)
 
 /* Process numbers of some important processes */
 #define MM_PROC_NR         0	/* process number of memory manager */
