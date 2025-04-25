@@ -34,12 +34,6 @@ message *m_ptr;			/* interrupt message to send to the task */
 
   int i, n, old_map, this_bit;
 
-#ifdef i8088
-  /* Re-enable the 8259A interrupt controller. */
-  port_out(INT_CTL, ENABLE);	/* this re-enables the 8259A controller chip */
-  if (pc_at) port_out(INT2_CTL, ENABLE);	/* re-enable second 8259A */
-#endif
-
   /* Try to send the interrupt message to the indicated task. */
   this_bit = 1 << (-task);
   if (mini_send(HARDWARE, task, m_ptr) != OK) {

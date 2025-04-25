@@ -41,9 +41,9 @@
 #define SCHED_RATE (MILLISEC*HZ/1000)	/* number of ticks per schedule */
 
 /* Clock parameters. */
-#define TIMER0          0x40	/* port address for timer channel 0 */
-#define TIMER_MODE      0x43	/* port address for timer channel 3 */
-#define IBM_FREQ    1193182L	/* IBM clock frequency for setting timer */
+#define TIMER0          0x2000	/* port address for timer channel 0 */
+#define TIMER_MODE      0x2003	/* port address for timer channel 3 */
+#define IBM_FREQ    4772728L	/* IBM clock frequency for setting timer */
 #define SQUARE_WAVE     0x36	/* mode for generating square wave */
 
 /* Clock task variables. */

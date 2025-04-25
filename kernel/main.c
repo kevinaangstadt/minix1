@@ -128,10 +128,7 @@ PUBLIC main()
   set_vec(KEYBOARD_VECTOR, tty_int, base_click);
   set_vec(FLOPPY_VECTOR, disk_int, base_click);
   set_vec(PRINTER_VECTOR, lpr_int, base_click);
-  if (pc_at)
-	  set_vec(AT_WINI_VECTOR, wini_int, base_click);
-  else
-	  set_vec(XT_WINI_VECTOR, wini_int, base_click);
+	set_vec(WINI_VECTOR, wini_int, base_click);
 
   /* Put a ptr to proc table in a known place so it can be found in /dev/mem */
   set_vec( (BASE - 4)/4, proc, (phys_clicks) 0);
@@ -141,7 +138,7 @@ PUBLIC main()
 
   /* Now go to the assembly code to start running the current process. */
   port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
-  port_out(INT2_MASK, 0);	/* same for second interrupt controller */
+
   restart();
 }
 
