@@ -885,7 +885,10 @@ char c;				/* character to be output */
 		return;
 
 	case '\r':		/* carriage return */
-		move_to(tp, 0, tp->tty_row);
+		/*move_to(tp, 0, tp->tty_row);*/
+    tp->tty_column = 0;
+    if (tp->tty_rwords == TTY_RAM_WORDS) flush(tp);
+    tp->tty_ramqueue[tp->tty_rwords++] = tp->tty_attribute | c;
 		return;
 
 	case '\t':		/* tab */
