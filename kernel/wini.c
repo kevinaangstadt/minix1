@@ -77,6 +77,7 @@ PRIVATE struct param {
  PRIVATE int nr_drives;
 
  extern int vec_table[];
+ extern phys_bytes umap();
  
 FORWARD void copy_prt();
 FORWARD void get_params();
@@ -174,15 +175,7 @@ message *m_ptr;			/* pointer to read or write w_message */
     /* set Dx to the upper 16 bits of sector */
     Dx = (unsigned) ((sector >> 16) & 0xFFFF);
 
-    printf("ax: %x, bx: %x, cx: %x, dx: %x, es: %x\n", Ax, Bx, Cx, Dx, Es);
-
     bios13();
-
-    for (i = 0; i < 32; i++) {
-      printf("%x ", *((char *)user_phys)+i);
-    }
-    printf("\n");
-    
 
     r = (Ax >> 8) & 0xFF;
     return(r == 0 ? BLOCK_SIZE : EIO);
