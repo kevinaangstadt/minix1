@@ -23,8 +23,8 @@
 #define CLOCK_VECTOR       8	/* clock interrupt vector */
 #define KEYBOARD_VECTOR   11	/* keyboard interrupt vector */
 #define WINI_VECTOR	      13	/* xt winchester interrupt vector */
-#define FLOPPY_VECTOR     14	/* floppy disk interrupt vector */
-#define PRINTER_VECTOR    15	/* line printer interrupt vector */
+#define FLOPPY_VECTOR     15	/* floppy disk interrupt vector */
+#define PRINTER_VECTOR    12	/* line printer interrupt vector */
 #define SYS_VECTOR        32	/* system calls are made with int SYSVEC */
 
 /* The 8259A interrupt controller is set to be auto-re-enabled after each interrupt. */

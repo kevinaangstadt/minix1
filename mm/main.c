@@ -162,7 +162,7 @@ PUBLIC do_brk2()
   mem1 = tot_mem/CLICK_TO_K;
   mem2 = (ram_base + 512/CLICK_SIZE)/CLICK_TO_K;	/* MINIX, rounded */
   mem3 = ram_clicks/CLICK_TO_K;
-  printf("%c 8%c~0",033, 033);	/* go to top of screen and clear screen */
+  printf("%c[H%c[J",033, 033);	/* go to top of screen and clear screen */
   printf("Memory size = %dK     ", mem1);
   printf("MINIX = %dK     ", mem2);
   printf("RAM disk = %dK     ", mem3);

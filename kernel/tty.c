@@ -198,6 +198,7 @@ message *m_ptr;			/* message containing pointer to char(s) */
   struct tty_struct *tp;
 
   lock();			/* prevent races by disabling interrupts */
+  printf("p");
   ptr = m_ptr->ADDRESS;		/* pointer to accumulated char array */
   copy_ptr = tty_copy_buf;	/* ptr to shadow array where chars copied */
   n = *ptr;			/* how many chars have been accumulated */
@@ -709,6 +710,8 @@ long other;			/* used for IOCTL replies */
 #define UART_DATA       KEYBD
 #define LSR             0x6005  /* I/O port for UART status */
 #define LSR_READY       0x20	/* LSR bit for data ready */
+#define UART_FIFO     0x6002  /* FIFO control register */
+#define UART_IER      0x6001  /* Interrupt enable register */
 #define PORT_A          0x4000	/* I/O port for PIO control register A */
 
 /* Constants relating to the video RAM and 6845. */
@@ -746,8 +749,11 @@ PUBLIC keyboard()
   int val, ch, k, raw_bit;
   char stopc;
 
+  beep();
+
   /* Fetch the character from the keyboard hardware and acknowledge it. */
   port_in(KEYBD, &ch);	/* get the character for the key */
+  printf("ch=%d\n", ch);
 
 
 	/* Check to see if character is CTRL-S, to stop output. Setting xoff
@@ -860,6 +866,7 @@ char c;				/* character to be output */
 		beep(BEEP_FREQ);/* BEEP_FREQ gives bell tone */
 		return;
 
+  #if 0
 	case 013:		/* CTRL-K */
 		move_to(tp, tp->tty_column, tp->tty_row + 1);
 		return;
@@ -872,6 +879,7 @@ char c;				/* character to be output */
 		move_to(tp, tp->tty_column + 1, tp->tty_row);
 		return;
 
+  
 	case '\b':		/* backspace */
 		move_to(tp, tp->tty_column - 1, tp->tty_row);
 		return;
@@ -901,15 +909,19 @@ char c;				/* character to be output */
 		/* Ignore tab is XTABS is off--video RAM has no hardware tab */
 		return;
 
-  #if 0
+  
 	case 033:		/* ESC - start of an escape sequence */
 		flush(tp);	/* print any chars queued for output */
 		tp->tty_esc_state = 1;	/* mark ESC as seen */
 		return;
   #endif
 
+  case '\n':
+    if (tp->tty_mode & CRMOD) out_char(tp, '\r');  
+    /* Fall through to default */
+
 	default:		/* printable chars are stored in ramqueue */
-		/*if (tp->tty_column >= LINE_WIDTH) return;	/* long line */
+		/* if (tp->tty_column >= LINE_WIDTH) return;	/* long line */
 		if (tp->tty_rwords == TTY_RAM_WORDS) flush(tp);
 		tp->tty_ramqueue[tp->tty_rwords++] = tp->tty_attribute | c;
 		tp->tty_column++;	/* next column */
@@ -966,11 +978,12 @@ int y;				/* row (0 <= y <= 24, 0 at bottom) */
 {
 /* Move the cursor to (x, y). */
   int row;
+  /* if (x < 0 || x >= LINE_WIDTH || y < 0 || y >= SCR_LINES) return;
   /* set the coordinates */
   tp->tty_column = x;
   tp->tty_row = y;
   /* convert y to row*/
-  row = SCR_LINES - y;
+  row = SCR_LINES - y - 1;
   out_seq(tp, "\033[", 2);	/* ESC [ */
   outi(tp, row);		/* row */
   out_char(tp, ';');		/* ; */
@@ -1155,15 +1168,19 @@ PRIVATE tty_init()
   }
   tty_struct[0].tty_attribute = BLANK;
   tty_driver_buf[1] = MAX_OVERRUN;	/* set up limit on keyboard buffering */
-  set_6845(CUR_SIZE, 31);		/* set cursor shape */
-  set_6845(VID_ORG, 0);			/* use page 0 of video ram */
+  /* set_6845(CUR_SIZE, 31);		/* set cursor shape */
+  /* set_6845(VID_ORG, 0);			/* use page 0 of video ram */
   move_to(&tty_struct[0], 0, 0);	/* move cursor to lower left corner */
+
+  /* Set up the 16550D for FIFO mode and interrupts*/
+  port_out(UART_FIFO, 0x1);
+  port_out(UART_IER, 0x1);	/* enable interrupts */
 
   /* Determine which keyboard type is attached.  The bootstrap program asks 
    * the user to type an '='.  The scan codes for '=' differ depending on the
    * keyboard in use.
    */
-  if (scan_code == OLIVETTI_EQUAL) olivetti = TRUE;
+  /* if (scan_code == OLIVETTI_EQUAL) olivetti = TRUE; */
 }
 
 

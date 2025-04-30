@@ -134,7 +134,7 @@ PUBLIC main()
   pick_proc();
 
   /* Now go to the assembly code to start running the current process. */
-  /* FIXME port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
+  port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
 
   restart();
 }

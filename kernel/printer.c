@@ -39,8 +39,8 @@
 #define NO_PAPER        0x20	/* status bit saying that paper is up */
 #define OFF_LINE        0x10	/* status bit saying that printer not online*/
 #define PR_ERROR        0x08	/* something is wrong with the printer */
-#define PR_COLOR_BASE  0x378	/* printer port when color display used */
-#define PR_MONO_BASE   0x3BC	/* printer port when mono display used */
+#define PR_COLOR_BASE  0xE378	/* printer port when color display used */
+#define PR_MONO_BASE   0xE3BC	/* printer port when mono display used */
 #define LOW_FOUR         0xF	/* mask for low-order 4 bits */
 #define CANCELED        -999	/* indicates that command has been killed */
 #define DELAY_COUNT      100	/* regulates delay between characters */

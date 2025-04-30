@@ -29,16 +29,16 @@
 #include "proc.h"
 
 /* I/O Ports used by floppy disk task. */
-#define DOR            0x3F2	/* motor drive control bits */
-#define FDC_STATUS     0x3F4	/* floppy disk controller status register */
-#define FDC_DATA       0x3F5	/* floppy disk controller data register */
-#define FDC_RATE       0x3F7	/* transfer rate register */
-#define DMA_ADDR       0x004	/* port for low 16 bits of DMA address */
-#define DMA_TOP        0x081	/* port for top 4 bits of 20-bit DMA addr */
-#define DMA_COUNT      0x005	/* port for DMA count (count =  bytes - 1) */
-#define DMA_M2         0x00C	/* DMA status port */
-#define DMA_M1         0x00B	/* DMA status port */
-#define DMA_INIT       0x00A	/* DMA init port */
+#define DOR            0xE3F2	/* motor drive control bits */
+#define FDC_STATUS     0xE3F4	/* floppy disk controller status register */
+#define FDC_DATA       0xE3F5	/* floppy disk controller data register */
+#define FDC_RATE       0xE3F7	/* transfer rate register */
+#define DMA_ADDR       0xE004	/* port for low 16 bits of DMA address */
+#define DMA_TOP        0xE081	/* port for top 4 bits of 20-bit DMA addr */
+#define DMA_COUNT      0xE005	/* port for DMA count (count =  bytes - 1) */
+#define DMA_M2         0xE00C	/* DMA status port */
+#define DMA_M1         0xE00B	/* DMA status port */
+#define DMA_INIT       0xE00A	/* DMA init port */
 
 /* Status registers returned as result of operation. */
 #define ST0             0x00	/* status register 0 */
