@@ -134,8 +134,8 @@ PUBLIC main()
   pick_proc();
 
   /* Now go to the assembly code to start running the current process. */
-  port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
-
+  /* port_out(INT_CTLMASK, 0);	/* do not mask out any interrupts in 8259A */
+  port_out(INT_CTLMASK, 0xF6); /* mask out all but the clock and UART */
   restart();
 }
 
