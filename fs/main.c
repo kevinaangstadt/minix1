@@ -236,7 +236,7 @@ PRIVATE load_ram()
   copy(super_block, bp->b_data, sizeof(struct super_block));
   sp = &super_block[0];
   if (sp->s_magic != SUPER_MAGIC)
-	panic("Diskette in drive 0 is not root file system", NO_NUM);
+	panic("/dev/hd1 is not root file system", NO_NUM);
   count = sp->s_nzones << sp->s_log_zone_size;	/* # blocks on root dev */
   if (count > MAX_RAM) panic("RAM disk is too big. # blocks = ", count);
   ram_clicks = count * (BLOCK_SIZE/CLICK_SIZE);
@@ -261,7 +261,7 @@ PRIVATE load_ram()
   if (sendrec(MEM, &m1) != OK) panic("Can't report size to MEM", NO_NUM);
 
   /* Copy the blocks one at a time from the root diskette to the RAM */
-  printf("Loading RAM disk from root diskette.      Loaded:   0K ");
+  printf("Loading RAM disk from /dev/hd1.      Loaded:   0K ");
   for (i = 0; i < count; i++) {
 	bp = get_block(BOOT_DEV, (block_nr) i, NORMAL);
 	bp1 = get_block(ROOT_DEV, i, NO_READ);
@@ -273,7 +273,7 @@ PRIVATE load_ram()
 	if (k_loaded % 5 == 0) printf("\b\b\b\b\b%3DK %c", k_loaded, 0);
   }
 
-  printf("\rRAM disk loaded.  Please remove root diskette.           \n\n");
+  printf("\rRAM disk loaded.                                            \n\n");
 }
 
 
