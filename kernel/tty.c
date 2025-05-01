@@ -198,7 +198,6 @@ message *m_ptr;			/* message containing pointer to char(s) */
   struct tty_struct *tp;
 
   lock();			/* prevent races by disabling interrupts */
-  printf("p");
   ptr = m_ptr->ADDRESS;		/* pointer to accumulated char array */
   copy_ptr = tty_copy_buf;	/* ptr to shadow array where chars copied */
   n = *ptr;			/* how many chars have been accumulated */
@@ -706,13 +705,24 @@ long other;			/* used for IOCTL replies */
 #define GO_BACKWARD        1	/* scroll backward */
 #define TIMERCTL        0x2003	/* I/O port for timer control */
 #define TIMER3          0x2002	/* I/O port for timer channel 3 */
+
+#define PORT_A          0x4000	/* I/O port for PIO control register A */
+
+/* Constants for 16550D UART */
 #define KEYBD           0x6000	/* I/O port for keyboard data */
 #define UART_DATA       KEYBD
 #define LSR             0x6005  /* I/O port for UART status */
 #define LSR_READY       0x20	/* LSR bit for data ready */
+#define MSR             0x6006  /* I/O port for UART modem status */
 #define UART_FIFO     0x6002  /* FIFO control register */
 #define UART_IER      0x6001  /* Interrupt enable register */
-#define PORT_A          0x4000	/* I/O port for PIO control register A */
+#define UART_IIR      0x6002  /* Interrupt identification register */
+#define INT_MSR       0xC0  /* modem status interrupt */
+#define INT_NONE      0xC1	/* no interrupt pending */
+#define INT_TX        0xC2	/* transmit interrupt */
+#define INT_RX        0xC4	/* receive interrupt */
+#define INT_LSR       0xC6	/* receiver line status interrupt */
+#define INT_TIMEOUT   0xCC	/* timeout interrupt */
 
 /* Constants relating to the video RAM and 6845. */
 #define M_6845         0x3B0	/* port for 6845 mono */
@@ -746,48 +756,69 @@ PUBLIC keyboard()
 {
 /* A keyboard interrupt has occurred.  Process it. */
 
-  int val, ch, k, raw_bit;
+  int val, ch, k, raw_bit, typ;
   char stopc;
 
-  beep();
+  /* check the interrupt type */
+  port_in(UART_IIR, &typ);
 
-  /* Fetch the character from the keyboard hardware and acknowledge it. */
-  port_in(KEYBD, &ch);	/* get the character for the key */
-  printf("ch=%d\n", ch);
+  switch(typ) {
+      case INT_RX:	/* data available */
+      case INT_TIMEOUT:	/* timeout */
+        /* this is a keyboard interrupt */
 
-
-	/* Check to see if character is CTRL-S, to stop output. Setting xoff
-	 * to anything other than CTRL-S will not be detected here, but will
-	 * be detected later, in the driver.  A general routine to detect any
-	 * xoff character here would be complicated since we only have the
-	 * scan code here, not the ASCII character.
-	 */
-	raw_bit = tty_struct[CONSOLE].tty_mode & RAW;
-	stopc = tty_struct[CONSOLE].tty_xoff;
-	if (raw_bit == 0 && ch == CTRL_S && stopc == XOFF_CHAR) {
-		tty_struct[CONSOLE].tty_inhibited = STOPPED;
-		return;
-	}
-
-  /* FIXME ALTERNATIVE TO CTRL-ALT-DEL */
-  /* Check for CTRL-ALT-DEL, and if found, reboot the computer. */
-  /* if (control && alt && code == DEL_CODE) reboot();	/* CTRL-ALT-DEL */
-
-  /* Store the character in memory so the task can get at it later. */
-  if ( (k = tty_driver_buf[0]) < tty_driver_buf[1]) {
-	/* There is room to store this character; do it. */
-	k = k + k;			/* each entry contains two bytes */
-	tty_driver_buf[k+2] = ch;	/* store the ascii */
-	tty_driver_buf[k+3] = CONSOLE;	/* tell which line it came from */
-	tty_driver_buf[0]++;		/* increment counter */
-
-	/* Build and send the interrupt message. */
-	keybd_mess.m_type = TTY_CHAR_INT;
-	keybd_mess.ADDRESS = tty_driver_buf;
-	interrupt(TTY, &keybd_mess);	/* send a message to the tty task */
-  } else {
-	/* Too many characters have been buffered.  Discard excess. */
+        /* Fetch the character from the keyboard hardware and acknowledge it. */
+        port_in(KEYBD, &ch);	/* get the character for the key */    
+      
+        /* Check to see if character is CTRL-S, to stop output. Setting xoff
+         * to anything other than CTRL-S will not be detected here, but will
+         * be detected later, in the driver.  A general routine to detect any
+         * xoff character here would be complicated since we only have the
+         * scan code here, not the ASCII character.
+         */
+        raw_bit = tty_struct[CONSOLE].tty_mode & RAW;
+        stopc = tty_struct[CONSOLE].tty_xoff;
+        if (raw_bit == 0 && ch == CTRL_S && stopc == XOFF_CHAR) {
+          tty_struct[CONSOLE].tty_inhibited = STOPPED;
+          return;
+        }
+      
+        /* FIXME ALTERNATIVE TO CTRL-ALT-DEL */
+        /* Check for CTRL-ALT-DEL, and if found, reboot the computer. */
+        /* if (control && alt && code == DEL_CODE) reboot();	/* CTRL-ALT-DEL */
+      
+        /* Store the character in memory so the task can get at it later. */
+        if ( (k = tty_driver_buf[0]) < tty_driver_buf[1]) {
+        /* There is room to store this character; do it. */
+        k = k + k;			/* each entry contains two bytes */
+        tty_driver_buf[k+2] = ch;	/* store the ascii */
+        tty_driver_buf[k+3] = CONSOLE;	/* tell which line it came from */
+        tty_driver_buf[0]++;		/* increment counter */
+      
+        /* Build and send the interrupt message. */
+        keybd_mess.m_type = TTY_CHAR_INT;
+        keybd_mess.ADDRESS = tty_driver_buf;
+        interrupt(TTY, &keybd_mess);	/* send a message to the tty task */
+        } else {
+        /* Too many characters have been buffered.  Discard excess. */
+        }
+        return;
+      case INT_LSR:	/* line status interrupt */
+        /* this is a line status interrupt */
+        /* read the lsr to clear */
+        port_in(LSR, &val);
+        return;
+      case INT_MSR:	/* modem status interrupt */
+        /* this is a modem status interrupt */
+        /* read the msr to clear */
+        port_in(MSR, &val);
+        return;
+      default:
+        /* this is an unknown interrupt */
+        return;
   }
+
+  
 }
 
 
@@ -1173,8 +1204,8 @@ PRIVATE tty_init()
   move_to(&tty_struct[0], 0, 0);	/* move cursor to lower left corner */
 
   /* Set up the 16550D for FIFO mode and interrupts*/
-  port_out(UART_FIFO, 0x1);
-  port_out(UART_IER, 0x1);	/* enable interrupts */
+  port_out(UART_FIFO, 0x81);
+  port_out(UART_IER, 0x05);	/* enable interrupts */
 
   /* Determine which keyboard type is attached.  The bootstrap program asks 
    * the user to type an '='.  The scan codes for '=' differ depending on the
